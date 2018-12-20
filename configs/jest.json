@@ -1,0 +1,20 @@
+{
+  "rootDir": "..",
+  "coverageDirectory": "<rootDir>/__coverage__/",
+  "roots": ["<rootDir>/src/"],
+  "moduleFileExtensions": ["ts", "tsx", "js", "jsx"],
+  "transform": {
+    "^.+\\.(ts|tsx)$": "<rootDir>/configs/jest.preprocessor.js"
+  },
+  "moduleNameMapper": {
+    "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/configs/file-mock.jest.js",
+    "\\.(scss|css)$": "<rootDir>/configs/style-mock.jest.js"
+  },
+  "transformIgnorePatterns": ["/node_modules/"],
+  "testRegex": "spec\\.(ts|tsx)$",
+  "moduleDirectories": ["node_modules"],
+  "globals": {
+    "DEVELOPMENT": false,
+    "FAKE_SERVER": false
+  }
+}

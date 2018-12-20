@@ -84,9 +84,9 @@ export const createRecipe = (): RecipeType => ({
 
   ibuMethod: 'tinseth',
 
-  fermentables: null,
-  spices: null,
-  yeast: null,
+  fermentables: [],
+  spices: [],
+  yeast: [],
 
   mash: null,
 
@@ -295,9 +295,7 @@ export const calculateRecipe = (oldRecipe: RecipeType) => {
   };
 
   // Calculate gravities and color from fermentables
-  for (let i = 0; i < recipe.fermentables.length; i++) {
-    const fermentable = recipe.fermentables[i];
-
+  recipe.fermentables.forEach(fermentable => {
     let efficiency = 1.0;
     if (fermentable.addition === 'steep') {
       efficiency = recipe.steepEfficiency / 100.0;
@@ -338,7 +336,7 @@ export const calculateRecipe = (oldRecipe: RecipeType) => {
         gravity: gu
       });
     }
-  }
+  });
 
   recipe.color = 1.4922 * Math.pow(mcu, 0.6859);
 

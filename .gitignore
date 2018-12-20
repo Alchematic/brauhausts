@@ -63,3 +63,4 @@ typings/
 build
 src/**.js
 .idea/*
+__coverage__
