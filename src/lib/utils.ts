@@ -14,10 +14,7 @@ export const computeTimeToHeat = (liters: number, degrees: number = 80) => {
   return (kj / GLOBALS.BURNER_ENERGY) * 60;
 };
 
-export const computeDisplayDuration = (
-  minutes: number,
-  approximate?: number
-) => {
+export const computeDisplayDuration = (minutes: number, approximate?: number) => {
   let durations: string[] = [];
 
   const factors = [
@@ -25,7 +22,7 @@ export const computeDisplayDuration = (
     { label: 'week', factor: 7 * 60 * 24 },
     { label: 'day', factor: 60 * 24 },
     { label: 'hour', factor: 60 },
-    { label: 'minute', factor: 1 }
+    { label: 'minute', factor: 1 },
   ];
 
   let count = 0;
@@ -60,3 +57,12 @@ export const computeDisplayDuration = (
 
   return durations.join(' ');
 };
+
+export const yieldToPpg = (yieldPercentage: number) => yieldPercentage * 0.46214;
+
+export const isObjectEqualWithRoundedNums = (a: any, b: any) =>
+  _.isEqualWith(a, b, (a: any, b: any) => {
+    if (_.isNumber(a) && _.isNumber(b)) {
+      return a.toFixed(2) === b.toFixed(2);
+    }
+  });

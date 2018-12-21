@@ -21,7 +21,7 @@ export const GLOBALS = {
     [22, 'brown'],
     [30, 'dark brown'],
     [35, 'very dark brown'],
-    [40, 'black']
+    [40, 'black'],
   ],
 
   // Relative sugar densities used to calculate volume from weights
@@ -29,6 +29,11 @@ export const GLOBALS = {
     cornSugar: 1.0,
     dme: 1.62,
     honey: 0.71,
-    sugar: 0.88
-  }
+    sugar: 0.88,
+  },
+
+  DRY_SPICE_REGEX: /primary|secondary|dry/i,
+
+  FERMENTABLE_STEEP_REGEX: /biscuit|black|cara|chocolate|crystal|munich|roast|special ?b|toast|victory|vienna/i,
+  FERMENTABLE_BOIL_REGEX: /candi|candy|dme|dry|extract|honey|lme|liquid|sugar|syrup|turbinado/i,
 };
