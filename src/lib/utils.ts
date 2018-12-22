@@ -73,3 +73,18 @@ export const convertLPerKgToQtPerLb = (lPerKg: number) => {
 
   return qtPerLb;
 };
+
+export const convertKgToLbOz = (kgs: number) => {
+  const lbs = Math.floor(
+    convert(kgs)
+      .from('kg')
+      .to('lb'),
+  );
+  const oz = Math.round(
+    convert(kgs)
+      .from('kg')
+      .to('oz') % 16,
+  );
+
+  return `${lbs > 0 ? `${lbs}lb` : ''} ${oz}oz`;
+};

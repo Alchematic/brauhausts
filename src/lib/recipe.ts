@@ -4,7 +4,7 @@ import { computeFermentableAddition, computeFermentableGU, computeFermentablePri
 import { GLOBALS } from './globals';
 import { computeMashStepDescription, createMash, Mash, MashStepType } from './mash';
 import { computeIsSpiceDry, computeSpiceBitterness, computeSpicePrice, Spice } from './spice';
-import { computeDisplayDuration, computeTimeToHeat } from './utils';
+import { computeDisplayDuration, computeTimeToHeat, convertKgToLbOz } from './utils';
 import { computeYeastPrice, Yeast } from './yeast';
 
 /**
@@ -319,7 +319,7 @@ export const calculateRecipe = (oldRecipe: Recipe) => {
 
     // Update timeline map with hop information
     if (computeIsSpiceDry(spice)) {
-      recipe.timelineMap['drySpice'][time] = recipe.timelineMap['drySpice'][time] || [];
+      recipe.timelineMap.drySpice[time] = recipe.timelineMap.drySpice[time] || [];
       recipe.timelineMap.drySpice[time].push({ spice, bitterness });
     } else {
       recipe.timelineMap.times[time] = recipe.timelineMap.times[time] || [];
@@ -338,21 +338,6 @@ export const calculateRecipe = (oldRecipe: Recipe) => {
   recipe.bv = (0.8 * recipe.ibu) / rte;
 
   return recipe;
-};
-
-const convertKgToLbOz = (kgs: number) => {
-  const lbs = Math.floor(
-    convert(kgs)
-      .from('kg')
-      .to('lb'),
-  );
-  const oz = Math.round(
-    convert(kgs)
-      .from('kg')
-      .to('oz') % 16,
-  );
-
-  return `${lbs > 0 ? `${lbs}lb` : ''} ${oz}oz`;
 };
 
 export const computeRecipeTimeline = (oldRecipe: Recipe, siUnits = true) => {
@@ -655,8 +640,8 @@ export const computeRecipeTimeline = (oldRecipe: Recipe, siUnits = true) => {
 interface TimelineMap {
   fermentables: TimelineFermentables;
   times: { [key: number]: TimelineSpice[] };
-  drySpice: any;
-  yeast: any[];
+  drySpice: { [key: number]: TimelineSpice[] };
+  yeast: Yeast[];
 }
 
 interface TimelineFermentables {
