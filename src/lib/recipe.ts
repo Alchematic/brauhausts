@@ -1,17 +1,18 @@
 import convert from 'convert-units';
 import * as _ from 'lodash';
-import { computeFermentableAddition, computeFermentableGU, computeFermentablePrice } from './fermentable';
+import { computeFermentableAddition, computeFermentableGU, computeFermentablePrice, Fermentable } from './fermentable';
 import { GLOBALS } from './globals';
-import { computeIsSpiceDry, computeSpiceBitterness, computeSpicePrice, computeSpiceUtilizationFactor } from './spice';
+import { computeMashStepDescription, createMash, Mash, MashStepType } from './mash';
+import { computeIsSpiceDry, computeSpiceBitterness, computeSpicePrice, Spice } from './spice';
 import { computeDisplayDuration, computeTimeToHeat } from './utils';
-import { computeYeastPrice } from './yeast';
+import { computeYeastPrice, Yeast } from './yeast';
 
 /**
  * A beer recipe, consisting of various ingredients and metadata which
  * provides a calculate() method to calculate OG, FG, IBU, ABV, and a
  * timeline of instructions for brewing the recipe.
  */
-type Recipe = {
+export type Recipe = {
   name: string;
   description: string;
   author: string;
@@ -26,11 +27,11 @@ type Recipe = {
   style: any; // Need a Style Type
   ibuMethod: 'tinseth' | 'rager';
 
-  fermentables: any[]; // Fermentable[];
-  spices: any[]; // Spice[];
-  yeast: any[]; // Yeast[];
+  fermentables: Fermentable[];
+  spices: Spice[];
+  yeast: Yeast[];
 
-  mash: any; // Mash;
+  mash: Mash;
 
   og: number;
   fg: number;
@@ -69,7 +70,7 @@ type Recipe = {
   boilStartTime?: any;
   boilEndTime?: any;
 
-  timelineMap?: ITimelineMap; // A mapping of values used to build a recipe timeline / instructions
+  timelineMap?: TimelineMap; // A mapping of values used to build a recipe timeline / instructions
 };
 
 export const createRecipe = (overrideRecipe?: Partial<Recipe>): Recipe => {
@@ -178,7 +179,7 @@ export const addToRecipe = (recipe: Recipe, type: 'fermentable' | 'spice' | 'hop
   return newRecipe;
 };
 
-const computeRecipeGrainWeight = (recipe: Recipe) => {
+export const computeRecipeGrainWeight = (recipe: Recipe) => {
   const grainFermentables = _.filter(recipe.fermentables, {
     type: 'grain',
   } as any);
@@ -187,67 +188,6 @@ const computeRecipeGrainWeight = (recipe: Recipe) => {
 };
 
 const computeBottleCount = (recipe: Recipe) => Math.floor(recipe.batchSize / recipe.servingSize);
-
-// TODO: Clean this up. Didn't touch any of the logic
-/** Scale this recipe, keeping gravity and bitterness the same */
-export const scaleRecipe = (recipe: Recipe, newBatchSize: number, newBoilSize: number) => {
-  const newRecipe = _.cloneDeep(recipe);
-  let earlyOg = 1.0;
-  let newEarlyOg = 1.0;
-
-  for (let i = 0; i < newRecipe.fermentables.length; i++) {
-    const fermentable = newRecipe.fermentables[i];
-
-    // Store early gravity for bitterness calculations
-    let efficiency = 1.0;
-    if (computeFermentableAddition(fermentable) === 'steep') {
-      efficiency = newRecipe.steepEfficiency / 100.0;
-    } else if (computeFermentableAddition(fermentable) === 'mash') {
-      efficiency = newRecipe.mashEfficiency / 100.0;
-    }
-
-    if (!fermentable.late) {
-      earlyOg += (computeFermentableGU(fermentable, newRecipe.boilSize) * efficiency) / 1000.0;
-    }
-
-    // Adjust fermentable weight
-    fermentable.weight *= newBatchSize / newRecipe.batchSize;
-
-    if (!fermentable.late) {
-      newEarlyOg += (computeFermentableGU(fermentable, newBoilSize) * efficiency) / 1000.0;
-    }
-  }
-
-  _.each(newRecipe.spices, spice => {
-    if (spice.aa && spice.time) {
-      const bitterness = computeSpiceBitterness(spice, newRecipe.ibuMethod, earlyOg, newRecipe.batchSize);
-
-      if (newRecipe.ibuMethod === 'tinseth') {
-        spice.weight =
-          (bitterness * newBatchSize) /
-          (1.65 *
-            Math.pow(0.000125, newEarlyOg - 1.0) *
-            ((1 - Math.pow(2.718, -0.04 * spice.time)) / 4.15) *
-            ((spice.aa / 100) * 1000000) *
-            computeSpiceUtilizationFactor(spice));
-      } else if (newRecipe.ibuMethod === 'rager') {
-        const utilization = 18.11 + 13.86 * Math.tanh((spice.time - 31.32) / 18.27);
-        const adjustment = Math.max(0, (newEarlyOg - 1.05) / 0.2);
-        spice.weight =
-          bitterness /
-          ((100 * utilization * computeSpiceUtilizationFactor(spice) * spice.aa) / (newBatchSize * (1 + adjustment)));
-      }
-    } else {
-      // Scale linearly, no bitterness
-      spice.weight *= newBatchSize / newRecipe.batchSize;
-    }
-  });
-
-  newRecipe.batchSize = newBatchSize;
-  newRecipe.boilSize = newBoilSize;
-
-  return newRecipe;
-};
 
 export const calculateRecipe = (oldRecipe: Recipe) => {
   const recipe = _.cloneDeep(oldRecipe);
@@ -425,7 +365,7 @@ export const computeRecipeTimeline = (oldRecipe: Recipe, siUnits = true) => {
   let liquidVolume = 0;
 
   // Get a list of fermentable descriptions taking siUnits into account
-  const fermentableList = (items: ITimelineFermentable[]) => {
+  const fermentableList = (items: TimelineFermentable[]) => {
     const ingredients: string[] = [];
     let weight = '';
 
@@ -443,7 +383,7 @@ export const computeRecipeTimeline = (oldRecipe: Recipe, siUnits = true) => {
   };
 
   // Get a list of spice descriptions taking siUnits into account
-  const spiceList = (items: ITimelineSpice[]) => {
+  const spiceList = (items: TimelineSpice[]) => {
     const ingredients: string[] = [];
     let weight = '';
 
@@ -468,23 +408,12 @@ export const computeRecipeTimeline = (oldRecipe: Recipe, siUnits = true) => {
   if (_.size(recipe.timelineMap.fermentables.mash) > 0) {
     boilName = 'wort';
 
-    let mash = recipe.mash;
-    mash = mash || {}; // TODO: {} was new Mash();
+    const mash = createMash(recipe, currentTemp, recipe.mash);
 
     const ingredients = fermentableList(recipe.timelineMap.fermentables.mash);
     timeline.push([totalTime, `Begin ${mash.name} mash. Add ${ingredients.join(', ')}.`]);
 
-    const steps = recipe.mash.steps || [
-      // Default to a basic 60 minute single-infusion mash at 68C
-      {
-        name: 'Saccharification',
-        type: MashStepType.Infusion,
-        time: 60,
-        rampTime: computeTimeToHeat(computeRecipeGrainWeight(recipe), 68 - currentTemp),
-        temp: 68,
-        waterRatio: 2.75,
-      },
-    ];
+    const steps = recipe.mash.steps;
 
     _.each(steps, step => {
       const strikeVolume = step.waterRatio * computeRecipeGrainWeight(recipe) - liquidVolume;
@@ -534,7 +463,10 @@ export const computeRecipeTimeline = (oldRecipe: Recipe, siUnits = true) => {
         timeline.push([totalTime, `Heat the mash to ${heatTemp} (about ${Math.round(timeToHeat)} minutes)`]);
         totalTime += timeToHeat;
       }
-      timeline.push([totalTime, `${step.name}: ${step.description(siUnits, computeRecipeGrainWeight(recipe))}.`]);
+      timeline.push([
+        totalTime,
+        `${step.name}: ${computeMashStepDescription(step, siUnits, computeRecipeGrainWeight(recipe))}.`,
+      ]);
       totalTime += step.time;
       currentTemp = step.temp - (step.time * GLOBALS.MASH_HEAT_LOSS) / 60.0;
     });
@@ -720,30 +652,26 @@ export const computeRecipeTimeline = (oldRecipe: Recipe, siUnits = true) => {
   return timeline;
 };
 
-interface ITimelineMap {
-  fermentables: ITimelineFermentables;
-  times: { [key: number]: ITimelineSpice[] };
+interface TimelineMap {
+  fermentables: TimelineFermentables;
+  times: { [key: number]: TimelineSpice[] };
   drySpice: any;
   yeast: any[];
 }
 
-interface ITimelineFermentables {
-  mash: ITimelineFermentable[];
-  steep: any;
-  boil: any;
-  boilEnd: any;
+interface TimelineFermentables {
+  mash: TimelineFermentable[];
+  steep: TimelineFermentable[];
+  boil: TimelineFermentable[];
+  boilEnd: TimelineFermentable[];
 }
 
-interface ITimelineFermentable {
-  fermentable: any;
+interface TimelineFermentable {
+  fermentable: Fermentable;
   gravity: number;
 }
 
-interface ITimelineSpice {
-  spice: any;
+interface TimelineSpice {
+  spice: Spice;
   bitterness: number;
-}
-
-enum MashStepType {
-  Infusion = 'Infusion',
 }

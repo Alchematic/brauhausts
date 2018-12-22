@@ -1,3 +1,4 @@
+import convert from 'convert-units';
 import * as _ from 'lodash';
 import { GLOBALS } from './globals';
 
@@ -59,3 +60,16 @@ export const computeDisplayDuration = (minutes: number, approximate?: number) =>
 };
 
 export const yieldToPpg = (yieldPercentage: number) => yieldPercentage * 0.46214;
+
+export const convertLPerKgToQtPerLb = (lPerKg: number) => {
+  const qtPerKg = convert(lPerKg)
+    .from('l')
+    .to('qt');
+
+  // Converting from lb to kg is the same as converting from 1/kg to 1/lb
+  const qtPerLb = convert(qtPerKg)
+    .from('lb')
+    .to('kg');
+
+  return qtPerLb;
+};

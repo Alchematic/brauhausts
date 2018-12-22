@@ -1,7 +1,16 @@
 import { GLOBALS } from './globals';
 
+export type Spice = {
+  name: string;
+  time: number;
+  aa: number;
+  weight: number;
+  use: 'boil' | 'mash' | 'primary' | 'secondary' | 'bottling';
+  form: 'pellet' | 'plug' | 'leaf';
+};
+
 export const computeSpiceBitterness = (
-  spice: any,
+  spice: Spice,
   ibuMethod: 'tinseth' | 'rager',
   earlyOg: number,
   batchSize: number,
@@ -29,8 +38,8 @@ export const computeSpiceBitterness = (
   }
 };
 
-export const computeSpiceUtilizationFactor = (spice: any) => (spice.form === 'pellet' ? 1.15 : 1.0);
+export const computeSpiceUtilizationFactor = (spice: Spice) => (spice.form === 'pellet' ? 1.15 : 1.0);
 
-export const computeSpicePrice = (spice: any) => spice.weight * 17.64; // This price stuff is garbo
+export const computeSpicePrice = (spice: Spice) => spice.weight * 17.64; // This price stuff is garbo
 
-export const computeIsSpiceDry = (spice: any) => GLOBALS.DRY_SPICE_REGEX.test(spice.use);
+export const computeIsSpiceDry = (spice: Spice) => GLOBALS.DRY_SPICE_REGEX.test(spice.use);
