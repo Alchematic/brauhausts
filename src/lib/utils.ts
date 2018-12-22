@@ -59,10 +59,3 @@ export const computeDisplayDuration = (minutes: number, approximate?: number) =>
 };
 
 export const yieldToPpg = (yieldPercentage: number) => yieldPercentage * 0.46214;
-
-export const isObjectEqualWithRoundedNums = (a: any, b: any) =>
-  _.isEqualWith(a, b, (a: any, b: any) => {
-    if (_.isNumber(a) && _.isNumber(b)) {
-      return a.toFixed(2) === b.toFixed(2);
-    }
-  });

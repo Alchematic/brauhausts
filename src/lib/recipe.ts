@@ -307,15 +307,15 @@ export const calculateRecipe = (oldRecipe: Recipe) => {
     // Add fermentable info into the timeline map
     if (computeFermentableAddition(fermentable) === 'boil') {
       if (!fermentable.late) {
-        recipe.timelineMap.fermentables.boil.push([fermentable, gu]);
+        recipe.timelineMap.fermentables.boil.push({ fermentable, gravity: gu });
       } else {
-        recipe.timelineMap.fermentables.boilEnd.push([fermentable, gu]);
+        recipe.timelineMap.fermentables.boilEnd.push({ fermentable, gravity: gu });
       }
     } else if (computeFermentableAddition(fermentable) === 'steep') {
-      recipe.timelineMap.fermentables.steep.push([fermentable, gu]);
+      recipe.timelineMap.fermentables.steep.push({ fermentable, gravity: gu });
     } else if (computeFermentableAddition(fermentable) === 'mash') {
       recipe.timelineMap.fermentables.mash.push({
-        fermentable: fermentable,
+        fermentable,
         gravity: gu,
       });
     }
@@ -380,12 +380,12 @@ export const calculateRecipe = (oldRecipe: Recipe) => {
     // Update timeline map with hop information
     if (computeIsSpiceDry(spice)) {
       recipe.timelineMap['drySpice'][time] = recipe.timelineMap['drySpice'][time] || [];
-      recipe.timelineMap.drySpice[time].push([spice, bitterness]);
+      recipe.timelineMap.drySpice[time].push({ spice, bitterness });
     } else {
       recipe.timelineMap.times[time] = recipe.timelineMap.times[time] || [];
       recipe.timelineMap.times[time].push({
-        spice: spice,
-        bitterness: bitterness,
+        spice,
+        bitterness,
       });
     }
   });
@@ -549,10 +549,9 @@ export const computeRecipeTimeline = (oldRecipe: Recipe, siUnits = true) => {
     let steepVolume = '';
     let steepTemp = '';
 
-    for (let i = 0; i < recipe.timelineMap.fermentables.steep.length; i++) {
-      const fermentable = recipe.timelineMap.fermentables.steep[i].fermentable;
+    _.each(recipe.timelineMap.fermentables.steep, ({ fermentable }) => {
       steepWeight += fermentable.weight;
-    }
+    });
 
     const steepHeatTime = computeTimeToHeat(steepWeight * 2.75, 68 - currentTemp);
     currentTemp = 68;
