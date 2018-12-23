@@ -1,5 +1,6 @@
 import convert from 'convert-units';
 import * as _ from 'lodash';
+import { parseString } from 'xml2js';
 import { GLOBALS } from './globals';
 
 /**
@@ -88,3 +89,41 @@ export const convertKgToLbOz = (kgs: number) => {
 
   return `${lbs > 0 ? `${lbs}lb` : ''} ${oz}oz`;
 };
+
+const removeUnnecessaryArray = (value: any): any => {
+  if (_.isArray(value) && _.size(value) === 1) {
+    return _.cloneDeepWith(_.first(value), removeUnnecessaryArray);
+  }
+};
+
+export const parseXML = (xmlString: string): Promise<any> =>
+  new Promise((resolve, reject) => {
+    parseString(xmlString, (err, result) => {
+      if (err) {
+        reject(err);
+      }
+      resolve(_.cloneDeepWith(result, removeUnnecessaryArray));
+    });
+  });
+
+export const isObjectEqualWithRoundedNums = (a: any, b: any, percentDiffMax: number): boolean =>
+  _.isEqualWith(a, b, (a: any, b: any) => {
+    if (_.isNumber(a) && _.isNumber(b)) {
+      const percentDiff = Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b));
+
+      return percentDiff <= percentDiffMax || _.isNaN(percentDiff);
+    }
+    if (_.isString(a) && _.isString(b)) {
+      if (a === b) {
+        return true;
+      }
+      const aNumbers = _.map(_.words(a, /[0-9]+\.?([0-9]+)?/g), _.toNumber);
+      const bNumbers = _.map(_.words(b, /[0-9]+\.?([0-9]+)?/g), _.toNumber);
+
+      if (_.size(aNumbers) === 0 || _.size(bNumbers) === 0) {
+        return false;
+      }
+
+      return isObjectEqualWithRoundedNums(aNumbers, bNumbers, percentDiffMax);
+    }
+  });

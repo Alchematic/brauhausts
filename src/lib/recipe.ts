@@ -4,6 +4,7 @@ import { computeFermentableAddition, computeFermentableGU, computeFermentablePri
 import { GLOBALS } from './globals';
 import { computeMashStepDescription, createMash, Mash, MashStepType } from './mash';
 import { computeIsSpiceDry, computeSpiceBitterness, computeSpicePrice, Spice } from './spice';
+import { Style } from './style';
 import { computeDisplayDuration, computeTimeToHeat, convertKgToLbOz } from './utils';
 import { computeYeastPrice, Yeast } from './yeast';
 
@@ -24,7 +25,7 @@ export type Recipe = {
   steepTime: number;
   mashEfficiency: number;
 
-  style: any; // Need a Style Type
+  style: Style;
   ibuMethod: 'tinseth' | 'rager';
 
   fermentables: Fermentable[];

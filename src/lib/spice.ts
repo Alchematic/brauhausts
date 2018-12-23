@@ -9,6 +9,15 @@ export type Spice = {
   form: 'pellet' | 'plug' | 'leaf';
 };
 
+export const createDefaultSpice = (): Spice => ({
+  name: '',
+  weight: 0.025,
+  aa: 0.0,
+  use: 'boil',
+  time: 60,
+  form: 'pellet',
+});
+
 export const computeSpiceBitterness = (
   spice: Spice,
   ibuMethod: 'tinseth' | 'rager',

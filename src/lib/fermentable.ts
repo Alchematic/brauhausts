@@ -11,6 +11,15 @@ export type Fermentable = {
   late?: boolean;
 };
 
+export const createDefaultFermentable = (): Fermentable => ({
+  name: '',
+  type: 'Grain',
+  weight: 1.0,
+  yield: 75.0,
+  color: 2.0,
+  late: false,
+});
+
 export const computeFermentableGU = (fermentable: Fermentable, liters = 1) =>
   (yieldToPpg(fermentable.yield) *
     convert(fermentable.weight)

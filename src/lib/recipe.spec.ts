@@ -1,27 +1,6 @@
 import * as _ from 'lodash';
 import { calculateRecipe, computeRecipeTimeline, createRecipe } from './recipe';
-
-const isObjectEqualWithRoundedNums = (a: any, b: any): boolean =>
-  _.isEqualWith(a, b, (a: any, b: any) => {
-    if (_.isNumber(a) && _.isNumber(b)) {
-      const percentDiff = Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b));
-
-      return percentDiff <= 0.15 || _.isNaN(percentDiff);
-    }
-    if (_.isString(a) && _.isString(b)) {
-      if (a === b) {
-        return true;
-      }
-      const aNumbers = _.map(_.words(a, /[0-9]+\.?([0-9]+)?/g), _.toNumber);
-      const bNumbers = _.map(_.words(b, /[0-9]+\.?([0-9]+)?/g), _.toNumber);
-
-      if (_.size(aNumbers) === 0 || _.size(bNumbers) === 0) {
-        return false;
-      }
-
-      return isObjectEqualWithRoundedNums(aNumbers, bNumbers);
-    }
-  });
+import { isObjectEqualWithRoundedNums } from './utils';
 
 const realRecipe = JSON.parse(
   '{"fermentables":[{"name":"Extra pale extract","weight":4,"yield":75,"color":2.5,"late":false}],"spices":[{"name":"Cascade hops","weight":0.028349556839727483,"aa":4.5,"use":"boil","time":60,"form":"pellet"}],"yeast":[{"name":"Wyeast 3052","type":"ale","form":"liquid","attenuation":74}],"name":"Test Recipe","batchSize":20,"ibuMethod":"tinseth","description":"Recipe description","author":"Anonymous Brewer","boilSize":10,"servingSize":0.355,"steepEfficiency":50,"steepTime":20,"mashEfficiency":75,"style":null,"mash":null,"og":0,"fg":0,"color":0,"ibu":0,"abv":0,"price":0,"buToGu":0,"bv":0,"ogPlato":0,"fgPlato":0,"abw":0,"realExtract":0,"calories":0,"bottlingTemp":0,"bottlingPressure":0,"primingCornSugar":0,"primingSugar":0,"primingHoney":0,"primingDme":0,"primaryDays":14,"primaryTemp":20,"secondaryDays":0,"secondaryTemp":0,"tertiaryDays":0,"tertiaryTemp":0,"agingDays":14,"agingTemp":20,"brewDayDuration":null,"boilStartTime":null,"boilEndTime":null,"timelineMap":null}',
@@ -71,6 +50,8 @@ describe('createRecipe', () => {
   });
 });
 
+const percentDiffMax = 0.15;
+
 describe('calculateRecipe', () => {
   it('should return the result that brauhaus returns for realRecipe', () => {
     const recipe = createRecipe(realRecipe);
@@ -78,7 +59,7 @@ describe('calculateRecipe', () => {
     const result = calculateRecipe(recipe);
 
     // expect(result).toEqual(calculatedRealRecipe);
-    expect(isObjectEqualWithRoundedNums(result, calculatedRealRecipe)).toBe(true);
+    expect(isObjectEqualWithRoundedNums(result, calculatedRealRecipe, percentDiffMax)).toBe(true);
   });
 
   it('should return the result that brauhaus returns for realRecipe2', () => {
@@ -88,7 +69,7 @@ describe('calculateRecipe', () => {
     const result = calculateRecipe(recipe);
 
     // expect(result).toEqual(calculatedRealRecipe2);
-    expect(isObjectEqualWithRoundedNums(result, calculatedRealRecipe2)).toBe(true);
+    expect(isObjectEqualWithRoundedNums(result, calculatedRealRecipe2, percentDiffMax)).toBe(true);
   });
 
   it('should return the result that brauhaus returns for realRecipe3', () => {
@@ -97,7 +78,7 @@ describe('calculateRecipe', () => {
     const result = calculateRecipe(recipe);
 
     // expect(result).toEqual(calculatedRealRecipe3);
-    expect(isObjectEqualWithRoundedNums(result, calculatedRealRecipe3)).toBe(true);
+    expect(isObjectEqualWithRoundedNums(result, calculatedRealRecipe3, percentDiffMax)).toBe(true);
   });
 });
 
@@ -109,7 +90,7 @@ describe('computeRecipeTimeline', () => {
     const result = computeRecipeTimeline(calculatedRecipe);
 
     // expect(result).toEqual(realRecipeTimeline2);
-    expect(isObjectEqualWithRoundedNums(result, realRecipeTimeline2)).toBe(true);
+    expect(isObjectEqualWithRoundedNums(result, realRecipeTimeline2, percentDiffMax)).toBe(true);
   });
 
   it('should return the same timeline that brauhaus returns for realRecipe3', () => {
@@ -119,6 +100,6 @@ describe('computeRecipeTimeline', () => {
     const result = computeRecipeTimeline(calculatedRecipe);
 
     // expect(result).toEqual(realRecipeTimeline3);
-    expect(isObjectEqualWithRoundedNums(result, realRecipeTimeline3)).toBe(true);
+    expect(isObjectEqualWithRoundedNums(result, realRecipeTimeline3, percentDiffMax)).toBe(true);
   });
 });

@@ -49,8 +49,10 @@
     "node": ">=8.9"
   },
   "dependencies": {
+    "@types/xml2js": "^0.4.3",
     "convert-units": "github:ben-ng/convert-units#master",
-    "lodash": "^4.17.11"
+    "lodash": "^4.17.11",
+    "xml2js": "^0.4.19"
   },
   "devDependencies": {
     "@types/jest": "^23.3.10",
