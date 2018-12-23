@@ -524,7 +524,7 @@ export const computeRecipeTimeline = (oldRecipe: Recipe, siUnits = true) => {
 
   recipe.boilStartTime = totalTime;
 
-  const times = Object.keys(recipe.timelineMap.times);
+  const times = _.orderBy(Object.keys(recipe.timelineMap.times), _.parseInt, 'desc');
 
   // If we have late additions and no late addition time, add it
   if (recipe.timelineMap.fermentables.boilEnd.length && times.indexOf('5') === -1) {
@@ -534,8 +534,7 @@ export const computeRecipeTimeline = (oldRecipe: Recipe, siUnits = true) => {
 
   let previousSpiceTime = 0;
   // Sort times by descending here
-  const spiceCounter = 0;
-  _.each(times, unparsedTime => {
+  _.each(times, (unparsedTime, spiceCounter) => {
     const time = parseInt(unparsedTime);
     let ingredients = spiceList(recipe.timelineMap.times[time]);
 
