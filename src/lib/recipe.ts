@@ -2,7 +2,7 @@ import convert from 'convert-units';
 import * as _ from 'lodash';
 import { computeFermentableAddition, computeFermentableGU, computeFermentablePrice, Fermentable } from './fermentable';
 import { GLOBALS } from './globals';
-import { computeMashStepDescription, createMash, Mash, MashStepType } from './mash';
+import { computeMashStepDescription, createMash, Mash, MashStep, MashStepType } from './mash';
 import { computeIsSpiceDry, computeSpiceBitterness, computeSpicePrice, Spice } from './spice';
 import { Style } from './style';
 import { computeDisplayDuration, computeTimeToHeat, convertKgToLbOz } from './utils';
@@ -341,227 +341,257 @@ export const calculateRecipe = (oldRecipe: Recipe) => {
   return recipe;
 };
 
-export const computeRecipeTimeline = (oldRecipe: Recipe, siUnits = true) => {
-  const recipe = _.cloneDeep(oldRecipe);
-  const timeline = [];
+/**
+ * Get a list of fermentable descriptions taking siUnits into account
+ */
+export const createFermentableIngredientList = (fermentables: TimelineFermentable[], isSiUnits = true) =>
+  _.map(fermentables, ({ fermentable, gravity }) => {
+    const weight = isSiUnits ? `${fermentable.weight.toFixed(2)}kg` : convertKgToLbOz(fermentable.weight);
 
-  let boilName = 'water';
-  let totalTime = 0;
-  let currentTemp = GLOBALS.ROOM_TEMP;
-  let liquidVolume = 0;
+    return `${weight} of ${fermentable.name} (${gravity.toFixed(1)} GU)`;
+  });
 
-  // Get a list of fermentable descriptions taking siUnits into account
-  const fermentableList = (items: TimelineFermentable[]) => {
-    const ingredients: string[] = [];
-    let weight = '';
+/**
+ * Get a list of spice descriptions taking siUnits into account
+ */
+export const createSpiceIngredientList = (spices: TimelineSpice[], isSiUnits = true) =>
+  _.map(spices, ({ spice, bitterness }) => {
+    const weight = isSiUnits ? `${spice.weight * 1000}g` : convertKgToLbOz(spice.weight);
+    const ibu = bitterness ? ` (${bitterness.toFixed(1)} IBU)` : '';
 
-    _.each(items, ({ fermentable, gravity }) => {
-      if (siUnits) {
-        weight = `${fermentable.weight.toFixed(2)}kg`;
-      } else {
-        weight = convertKgToLbOz(fermentable.weight);
-      }
+    return `${weight} of ${spice.name}${ibu}`;
+  });
 
-      ingredients.push(`${weight} of ${fermentable.name} (${gravity.toFixed(1)} GU)`);
-    });
+type BrewState = {
+  timeline: [number, string][];
+  volume: number;
+  temp: number;
+  time: number;
+  isSiUnits: boolean;
+};
 
-    return ingredients;
+const generateMashStepVolumeAdd = (
+  step: Readonly<MashStep>,
+  recipe: Readonly<Recipe>,
+  strikeVolume: number,
+  currentState: BrewState,
+): BrewState => {
+  // We are adding hot or cold water!
+  // 4.184 is the specific heat of water. Not sure what's being computed here.
+  const strikeTemp =
+    ((step.temp - currentState.temp) * (0.4184 * computeRecipeGrainWeight(recipe))) / strikeVolume + step.temp;
+  const timeToHeat = computeTimeToHeat(strikeVolume, strikeTemp - currentState.temp);
+
+  const strikeVolumeDesc = currentState.isSiUnits
+    ? `${strikeVolume.toFixed(1)}l`
+    : `${convert(strikeVolume)
+        .from('l')
+        .to('qt')}qts`;
+
+  const strikeTempDesc = currentState.isSiUnits
+    ? `${Math.round(strikeTemp)}°C`
+    : `${Math.round(
+        convert(strikeTemp)
+          .from('C')
+          .to('F'),
+      )}°F`;
+
+  return {
+    ...currentState,
+    timeline: _.concat(currentState.timeline, [
+      currentState.time,
+      `Heat ${strikeVolumeDesc} to ${strikeTempDesc} (about ${Math.round(timeToHeat)} minutes)`,
+    ]),
+    time: timeToHeat + currentState.time,
+    volume: strikeVolume + currentState.volume,
   };
+};
 
-  // Get a list of spice descriptions taking siUnits into account
-  const spiceList = (items: TimelineSpice[]) => {
-    const ingredients: string[] = [];
-    let weight = '';
+const generateMashStepHeat = (step: MashStep, currentState: BrewState) => {
+  let heatTemp = '';
+  const timeToHeat = computeTimeToHeat(currentState.volume, step.temp - currentState.temp);
 
-    _.each(items, ({ spice, bitterness }) => {
-      if (siUnits) {
-        weight = `${spice.weight * 1000}g`;
-      } else {
-        weight = convertKgToLbOz(spice.weight);
-      }
+  if (currentState.isSiUnits) {
+    heatTemp = `${Math.round(step.temp)}°C`;
+  } else {
+    heatTemp = `${Math.round(
+      convert(step.temp)
+        .from('C')
+        .to('F'),
+    )}°F`;
+  }
 
-      let extra = '';
-      if (bitterness) {
-        extra = ` (${bitterness.toFixed(1)} IBU)`;
-      }
+  return {
+    ...currentState,
+    timeline: _.concat(currentState.timeline, [
+      currentState.time,
+      `Heat the mash to ${heatTemp} (about ${Math.round(timeToHeat)} minutes)`,
+    ]),
+    time: currentState.time + timeToHeat,
+  };
+};
 
-      ingredients.push(`${weight} of ${spice.name}${extra}`);
-    });
+export const computeMashPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
+  const mash = createMash(recipe, currentState.temp, recipe.mash);
 
-    return ingredients;
+  const ingredients = createFermentableIngredientList(recipe.timelineMap.fermentables.mash);
+  currentState.timeline.push([currentState.time, `Begin ${mash.name} mash. Add ${ingredients.join(', ')}.`]);
+
+  const steps = recipe.mash.steps;
+
+  _.each(steps, step => {
+    const strikeVolume = step.waterRatio * computeRecipeGrainWeight(recipe) - currentState.volume;
+
+    if (step.temp !== currentState.temp && strikeVolume > 0) {
+      currentState = generateMashStepVolumeAdd(step, recipe, strikeVolume, currentState);
+    } else if (step.temp !== currentState.temp) {
+      currentState = generateMashStepHeat(step, currentState);
+    }
+
+    currentState.timeline.push([
+      currentState.time,
+      `${step.name}: ${computeMashStepDescription(step, currentState.isSiUnits, computeRecipeGrainWeight(recipe))}.`,
+    ]);
+    currentState.time += step.time;
+    currentState.temp = step.temp - (step.time * GLOBALS.MASH_HEAT_LOSS) / 60.0;
+  });
+
+  currentState.timeline.push([currentState.time, 'Remove grains from mash. This is now your wort.']);
+  currentState.time += 5;
+
+  return currentState;
+};
+
+export const computeSteepPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
+  let steepWeight = 0;
+
+  _.each(recipe.timelineMap.fermentables.steep, ({ fermentable }) => {
+    steepWeight += fermentable.weight;
+  });
+
+  const STEEP_LITERS_PER_KG = 2.75;
+  const STEEP_TEMP = 68;
+  const steepVolume = steepWeight * STEEP_LITERS_PER_KG;
+
+  const steepHeatTime = computeTimeToHeat(steepVolume, STEEP_TEMP - currentState.temp);
+  currentState.temp = STEEP_TEMP;
+  currentState.volume += steepVolume;
+
+  const steepVolumeText = currentState.isSiUnits
+    ? `${steepVolume.toFixed(1)}l`
+    : `${convert(steepVolume)
+        .from('l')
+        .to('gal')
+        .toFixed(1)}gal`;
+  const steepTemp = currentState.isSiUnits
+    ? `${STEEP_TEMP}°C`
+    : `${convert(STEEP_TEMP)
+        .from('C')
+        .to('F')
+        .toFixed(1)}°F`;
+
+  currentState.timeline.push([
+    currentState.time,
+    `Heat ${steepVolumeText} to ${steepTemp} (about ${Math.round(steepHeatTime)} minutes)`,
+  ]);
+  currentState.time += steepHeatTime;
+
+  const ingredients = createFermentableIngredientList(recipe.timelineMap.fermentables.steep);
+  currentState.timeline.push([
+    currentState.time,
+    `Add ${ingredients.join(', ')} and steep for ${recipe.steepTime} minutes.`,
+  ]);
+  currentState.time += recipe.steepTime;
+
+  return currentState;
+};
+
+export const computeRecipeTimeline = (recipe: Readonly<Recipe>, isSiUnits = true) => {
+  let boilName = 'water';
+  let currentState: BrewState = {
+    timeline: [],
+    time: 0,
+    temp: GLOBALS.ROOM_TEMP,
+    volume: 0,
+    isSiUnits: isSiUnits,
   };
 
   if (_.size(recipe.timelineMap.fermentables.mash) > 0) {
     boilName = 'wort';
-
-    const mash = createMash(recipe, currentTemp, recipe.mash);
-
-    const ingredients = fermentableList(recipe.timelineMap.fermentables.mash);
-    timeline.push([totalTime, `Begin ${mash.name} mash. Add ${ingredients.join(', ')}.`]);
-
-    const steps = recipe.mash.steps;
-
-    _.each(steps, step => {
-      const strikeVolume = step.waterRatio * computeRecipeGrainWeight(recipe) - liquidVolume;
-      let strikeVolumeDesc = '';
-      let strikeTempDesc = '';
-
-      if (step.temp !== currentTemp && strikeVolume > 0) {
-        // We are adding hot or cold water!
-        const strikeTemp =
-          ((step.temp - currentTemp) * (0.4184 * computeRecipeGrainWeight(recipe))) / strikeVolume + step.temp;
-        const timeToHeat = computeTimeToHeat(strikeVolume, strikeTemp - currentTemp);
-
-        if (siUnits) {
-          strikeVolumeDesc = `${strikeVolume.toFixed(1)}l`;
-          strikeTempDesc = `${Math.round(strikeTemp)}°C`;
-        } else {
-          strikeVolumeDesc = `${convert(strikeVolume)
-            .from('l')
-            .to('qt')}qts`;
-          strikeTempDesc = `${Math.round(
-            convert(strikeTemp)
-              .from('C')
-              .to('F'),
-          )}°F`;
-        }
-
-        timeline.push([
-          totalTime,
-          `Heat ${strikeVolumeDesc} to ${strikeTempDesc} (about ${Math.round(timeToHeat)} minutes)`,
-        ]);
-        liquidVolume += strikeVolume;
-        totalTime += timeToHeat;
-      } else if (step.temp !== currentTemp) {
-        let heatTemp = '';
-        const timeToHeat = computeTimeToHeat(liquidVolume, step.temp - currentTemp);
-
-        if (siUnits) {
-          heatTemp = `${Math.round(step.temp)}°C`;
-        } else {
-          heatTemp = `${Math.round(
-            convert(step.temp)
-              .from('C')
-              .to('F'),
-          )}°F`;
-        }
-
-        timeline.push([totalTime, `Heat the mash to ${heatTemp} (about ${Math.round(timeToHeat)} minutes)`]);
-        totalTime += timeToHeat;
-      }
-      timeline.push([
-        totalTime,
-        `${step.name}: ${computeMashStepDescription(step, siUnits, computeRecipeGrainWeight(recipe))}.`,
-      ]);
-      totalTime += step.time;
-      currentTemp = step.temp - (step.time * GLOBALS.MASH_HEAT_LOSS) / 60.0;
-    });
-
-    timeline.push([totalTime, 'Remove grains from mash. This is now your wort.']);
-    totalTime += 5;
+    currentState = computeMashPhase(recipe, currentState);
   }
 
   if (recipe.timelineMap.fermentables.steep.length) {
     boilName = 'wort';
-    let steepWeight = 0;
-    let steepVolume = '';
-    let steepTemp = '';
-
-    _.each(recipe.timelineMap.fermentables.steep, ({ fermentable }) => {
-      steepWeight += fermentable.weight;
-    });
-
-    const steepHeatTime = computeTimeToHeat(steepWeight * 2.75, 68 - currentTemp);
-    currentTemp = 68;
-    liquidVolume += steepWeight * 2.75;
-
-    if (siUnits) {
-      steepVolume = `${(steepWeight * 2.75).toFixed(1)}l`;
-      steepTemp = `${68}°C`;
-    } else {
-      steepVolume = `${convert(steepWeight * 2.75)
-        .from('l')
-        .to('gal')
-        .toFixed(1)}gal`;
-      steepTemp = `${convert(68)
-        .from('C')
-        .to('F')
-        .toFixed(1)}°F`;
-    }
-
-    timeline.push([totalTime, `Heat ${steepVolume} to ${steepTemp} (about ${Math.round(steepHeatTime)} minutes)`]);
-    totalTime += steepHeatTime;
-
-    const ingredients = fermentableList(recipe.timelineMap.fermentables.steep);
-    timeline.push([totalTime, `Add ${ingredients.join(', ')} and steep for ${recipe.steepTime} minutes.`]);
-    totalTime += 20;
+    currentState = computeSteepPhase(recipe, currentState);
   }
 
   // Adjust temperature based on added water
-  const waterChangeRatio = Math.min(1, liquidVolume / recipe.boilSize);
-  currentTemp = currentTemp * waterChangeRatio + GLOBALS.ROOM_TEMP * (1.0 - waterChangeRatio);
+  const waterChangeRatio = Math.min(1, currentState.volume / recipe.boilSize);
+  currentState.temp = currentState.temp * waterChangeRatio + GLOBALS.ROOM_TEMP * (1.0 - waterChangeRatio);
 
-  let boilVolume = '';
-  if (siUnits) {
-    boilVolume = `${recipe.boilSize.toFixed(1)}l`;
-  } else {
-    boilVolume = `${convert(recipe.boilSize)
-      .from('l')
-      .to('gal')
-      .toFixed(1)}gal`;
-  }
+  const boilVolume = isSiUnits
+    ? `${recipe.boilSize.toFixed(1)}l`
+    : `${convert(recipe.boilSize)
+        .from('l')
+        .to('gal')
+        .toFixed(1)}gal`;
 
-  let action = '';
-  if (recipe.boilSize - liquidVolume < recipe.boilSize) {
-    action = `Top up the ${boilName} to ${boilVolume} and heat to a rolling boil`;
-  } else {
-    action = `Bring ${boilVolume} to a rolling boil`;
-  }
+  // Old: recipe.boilSize - currentState.volume < recipe.boilSize
+  // ^ That's equivalent to currentState.volume > 0
+  const action =
+    currentState.volume > 0
+      ? `Top up the ${boilName} to ${boilVolume} and heat to a rolling boil`
+      : `Bring ${boilVolume} to a rolling boil`;
 
-  const boilTime = computeTimeToHeat(recipe.boilSize, 100 - currentTemp);
-  timeline.push([totalTime, `${action} (about ${boilTime} minutes).`]);
-  totalTime += boilTime;
+  const boilTime = computeTimeToHeat(recipe.boilSize, 100 - currentState.temp);
+  currentState.timeline.push([currentState.time, `${action} (about ${boilTime} minutes).`]);
+  currentState.time += boilTime;
 
-  recipe.boilStartTime = totalTime;
+  // Removed mutation
+  // recipe.boilStartTime = currentState.time;
 
   const times = _.orderBy(Object.keys(recipe.timelineMap.times), _.parseInt, 'desc');
 
   // If we have late additions and no late addition time, add it
-  if (recipe.timelineMap.fermentables.boilEnd.length && times.indexOf('5') === -1) {
+  if (recipe.timelineMap.fermentables.boilEnd.length && !_.includes(times, '5')) {
     recipe.timelineMap.times[5] = [];
     times.push('5');
   }
 
+  // Add fermentables that need to be boiled for a certain amount of time.
   let previousSpiceTime = 0;
-  // Sort times by descending here
-  _.each(times, (unparsedTime, spiceCounter) => {
+  _.each(times, (unparsedTime, index) => {
     const time = parseInt(unparsedTime);
-    let ingredients = spiceList(recipe.timelineMap.times[time]);
+    let ingredients = createSpiceIngredientList(recipe.timelineMap.times[time]);
 
-    if (spiceCounter === 0) {
-      ingredients = fermentableList(recipe.timelineMap.fermentables.boil).concat(ingredients);
+    if (index === 0) {
+      const boilIngredients = createFermentableIngredientList(recipe.timelineMap.fermentables.boil);
+      ingredients = _.concat(boilIngredients, ingredients);
       previousSpiceTime = time;
     }
 
-    totalTime += previousSpiceTime - time;
+    currentState.time += previousSpiceTime - time;
 
     previousSpiceTime = time;
 
     if (time === 5 && recipe.timelineMap.fermentables.boilEnd.length) {
-      ingredients = fermentableList(recipe.timelineMap.fermentables.boilEnd).concat(ingredients);
+      const boilEndIngredients = createFermentableIngredientList(recipe.timelineMap.fermentables.boilEnd);
+      ingredients = _.concat(boilEndIngredients, ingredients);
     }
 
-    timeline.push([totalTime, `Add ${ingredients.join(', ')}`]);
+    currentState.timeline.push([currentState.time, `Add ${ingredients.join(', ')}`]);
   });
 
-  totalTime += previousSpiceTime;
+  currentState.time += previousSpiceTime;
 
   // EDITING ENDS HERE
 
-  recipe.boilEndTime = totalTime;
+  // Removed mutation
+  // recipe.boilEndTime = currentState.time;
 
   let chillTemp = '';
-  if (siUnits) {
+  if (isSiUnits) {
     chillTemp = `${recipe.primaryTemp}°C`;
   } else {
     chillTemp = `${convert(recipe.primaryTemp)
@@ -569,57 +599,58 @@ export const computeRecipeTimeline = (oldRecipe: Recipe, siUnits = true) => {
       .to('F')}°F`;
   }
 
-  timeline.push([
-    totalTime,
+  currentState.timeline.push([
+    currentState.time,
     `Flame out. Begin chilling to ${chillTemp} and aerate the cooled wort (about 20 minutes).`,
   ]);
-  totalTime += 20;
+  currentState.time += 20;
 
-  let yeasts = recipe.yeast.map(x => x.name);
+  let yeasts = _.map(recipe.yeast, 'name');
 
-  if (!yeasts.length && recipe.primaryDays) {
+  if (_.isEmpty(yeasts) && recipe.primaryDays) {
     // No yeast given, but primary fermentation should happen...
     // Let's just use a generic "yeast" to pitch.
     yeasts = ['yeast'];
   }
 
   if (yeasts.length) {
-    timeline.push([
-      totalTime,
+    currentState.timeline.push([
+      currentState.time,
       `Pitch ${yeasts.join(', ')} and seal the fermenter. You should see bubbles in the airlock within 24 hours.`,
     ]);
   }
 
   // The brew day is over! Fermenting starts now.
-  recipe.brewDayDuration = totalTime;
+  // Removed mutation
+  // recipe.brewDayDuration = currentState.time;
 
   if (!recipe.primaryDays && !recipe.secondaryDays && !recipe.tertiaryDays) {
-    timeline.push([totalTime, `Drink immediately (about ${computeBottleCount(recipe)} bottles).`]);
+    currentState.timeline.push([currentState.time, `Drink immediately (about ${computeBottleCount(recipe)} bottles).`]);
 
-    return timeline;
+    return currentState.timeline;
   }
 
-  totalTime += recipe.primaryDays * 1440;
+  currentState.time += recipe.primaryDays * 1440;
 
   if (recipe.secondaryDays) {
-    timeline.push([
-      totalTime,
+    currentState.timeline.push([
+      currentState.time,
       `Move to secondary fermenter for ${computeDisplayDuration(recipe.secondaryDays * 1440, 2)}.`,
     ]);
-    totalTime += recipe.secondaryDays * 1440;
+    currentState.time += recipe.secondaryDays * 1440;
   }
   if (recipe.tertiaryDays) {
-    timeline.push([
-      totalTime,
+    currentState.timeline.push([
+      currentState.time,
       `Move to tertiary fermenter for ${computeDisplayDuration(recipe.tertiaryDays * 1440, 2)}.`,
     ]);
-    totalTime += recipe.tertiaryDays * 1440;
+    currentState.time += recipe.tertiaryDays * 1440;
   }
   let primeMsg = `Prime and bottle about ${computeBottleCount(recipe)} bottles.`;
 
   if (recipe.agingDays) {
     let ageTemp = '';
-    if (siUnits) {
+    if (isSiUnits) {
       ageTemp = `${recipe.agingTemp}C`;
     } else {
       ageTemp = `${convert(recipe.agingTemp)
@@ -629,12 +660,12 @@ export const computeRecipeTimeline = (oldRecipe: Recipe, siUnits = true) => {
 
     primeMsg += ` Age at ${ageTemp} for ${recipe.agingDays} days.`;
   }
-  timeline.push([totalTime, primeMsg]);
-  totalTime += recipe.agingDays * 1440;
+  currentState.timeline.push([currentState.time, primeMsg]);
+  currentState.time += recipe.agingDays * 1440;
 
-  timeline.push([totalTime, "Relax, don't worry and have a homebrew!"]);
+  currentState.timeline.push([currentState.time, "Relax, don't worry and have a homebrew!"]);
 
-  return timeline;
+  return currentState.timeline;
 };
 
 interface TimelineMap {
