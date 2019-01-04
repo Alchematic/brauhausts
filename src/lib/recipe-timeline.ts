@@ -236,6 +236,7 @@ const computeTopUpStep = (recipe: Recipe, currentState: BrewState, boilName: str
   const boilTime = computeTimeToHeat(recipe.boilSize, 100 - currentState.temp);
   currentState.timeline.push({ time: currentState.time, instructions: `${action} (about ${boilTime} minutes).` });
   currentState.time += boilTime;
+  currentState.volume = recipe.boilSize;
 
   return currentState;
 };
@@ -301,6 +302,7 @@ export const computeRecipeTimeline = (recipe: Readonly<Recipe>, isSiUnits = true
     currentState = computeSteepPhase(recipe, currentState);
   }
 
+  console.log('volume before topup', currentState.volume);
   currentState = computeTopUpStep(recipe, currentState, boilName);
 
   // Removed mutation
@@ -317,7 +319,6 @@ export const computeRecipeTimeline = (recipe: Readonly<Recipe>, isSiUnits = true
         .from('C')
         .to('F')}°F`;
 
-  computeTimeToCool(currentState.volume, 100, recipe.primaryTemp);
   currentState.timeline.push({
     time: currentState.time,
     instructions: `Flame out. Begin chilling to ${chillTemp} and aerate the cooled wort (about 20 minutes).`,
