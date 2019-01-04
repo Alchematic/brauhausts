@@ -5,7 +5,7 @@ import { GLOBALS } from './globals';
 import { computeMashStepDescription, createMash, Mash, MashStep } from './mash';
 import { computeRecipeGrainWeight, Recipe } from './recipe';
 import { Spice } from './spice';
-import { computeDisplayDuration, computeTimeToCool, computeTimeToHeat, convertKgToLbOz } from './utils';
+import { computeDisplayDuration, computeTimeToHeat, convertKgToLbOz } from './utils';
 import { Yeast } from './yeast';
 
 export type TimelineMap = {
