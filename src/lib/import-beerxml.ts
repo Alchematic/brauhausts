@@ -28,9 +28,9 @@ export const importBeerXML = async (xml: string) => {
     const yeasts = findPluralOrSingularAsArray(xmlRecipe, 'YEASTS', 'YEAST');
     const miscs = findPluralOrSingularAsArray(xmlRecipe, 'MISCS', 'MISC');
     const waters = findPluralOrSingularAsArray(xmlRecipe, 'WATERS', 'WATER');
-    const styles = findPluralOrSingularAsArray(xmlRecipe, 'STYLES', 'STYLE');
     // There are some weird cases here. Mashs and Styles seem to never actually be used, even though they exist
-    // in the beerxml docs
+    // in the beerxml docs. They are almost always listed as a singular mash or style. For now we can't handle multiple
+    const styles = findPluralOrSingularAsArray(xmlRecipe, 'STYLES', 'STYLE');
     const mashs = findPluralOrSingularAsArray(xmlRecipe, 'MASHS', 'MASH');
     const mashSteps = findPluralOrSingularAsArray(mashs, '[0].MASH_STEPS', '[0].MASH_STEP');
     const equipments = findPluralOrSingularAsArray(xmlRecipe, 'EQUIPMENTS', 'EQUIPMENT');
@@ -97,6 +97,10 @@ export const importBeerXML = async (xml: string) => {
       abv: [0, 14],
       carb: [1.0, 4.0],
     };
+    if (_.size(styles) > 1) {
+      console.warn(`We currently do not support having more than one style in a recipe. The recipe acts as if
+        only the first style exists.`);
+    }
     _.each(_.first(styles), (styleValue, styleKey) => {
       switch (styleKey.toLowerCase()) {
         case 'name':
@@ -218,6 +222,10 @@ export const importBeerXML = async (xml: string) => {
       return newYeast;
     });
 
+    if (_.size(mashs) > 1) {
+      console.warn(`We currently do not support having more than one mash in a recipe. The recipe acts as if
+        only the first mash exists.`);
+    }
     overrideRecipe.mash = createDefaultMash();
     _.each(_.first(mashs), (mashValue, mashKey) => {
       switch (mashKey.toLowerCase()) {

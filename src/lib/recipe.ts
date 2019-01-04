@@ -2,7 +2,7 @@ import convert from 'convert-units';
 import * as _ from 'lodash';
 import { computeFermentableAddition, computeFermentableGU, computeFermentablePrice, Fermentable } from './fermentable';
 import { GLOBALS } from './globals';
-import { computeMashStepDescription, createMash, Mash, MashStep, MashStepType } from './mash';
+import { computeMashStepDescription, createMash, Mash, MashStep } from './mash';
 import { computeIsSpiceDry, computeSpiceBitterness, computeSpicePrice, Spice } from './spice';
 import { Style } from './style';
 import { computeDisplayDuration, computeTimeToHeat, convertKgToLbOz } from './utils';

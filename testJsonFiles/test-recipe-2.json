@@ -1,0 +1,229 @@
+{
+  "original": {
+    "fermentables": [
+      { "name": "Munich liquid extract", "weight": 2.26795, "yield": 75.7346258709, "color": 10, "late": false },
+      { "name": "Wheat liquid extract", "weight": 1.36077, "yield": 75.7346258709, "color": 3, "late": false },
+      { "name": "Pilsner malt (steeped)", "weight": 0.226795, "yield": 73.5707794175, "color": 1, "late": false },
+      { "name": "Caramunich (steeped)", "weight": 0.226795, "yield": 75.7346258709, "color": 34, "late": false },
+      { "name": "Aromatic (steeped)", "weight": 0.1133975, "yield": 73.5707794175, "color": 19, "late": false }
+    ],
+    "spices": [
+      { "name": "Aramis hops", "weight": 0.0212615166549, "aa": 8.1, "use": "Boil", "time": 60, "form": "Pellet" },
+      { "name": "Aramis hops", "weight": 0.00708717221828, "aa": 8.1, "use": "Boil", "time": 60, "form": "Pellet" }
+    ],
+    "yeast": [{ "name": "WLP560 - Classic Saison Ale Blend", "type": "Ale", "form": "Liquid", "attenuation": 84 }],
+    "name": "Aramis Saison",
+    "style": {
+      "og": [1, 1.15],
+      "fg": [1, 1.15],
+      "ibu": [0, 150],
+      "color": [0, 500],
+      "abv": [0, 14],
+      "carb": [1, 4]
+    },
+    "author": "danielgtaylor",
+    "batchSize": 18.92705,
+    "boilSize": 11.35623,
+    "mashEfficiency": 75,
+    "description": "Recipe description",
+    "servingSize": 0.355,
+    "steepEfficiency": 50,
+    "steepTime": 20,
+    "ibuMethod": "tinseth",
+    "mash": null,
+    "og": 0,
+    "fg": 0,
+    "color": 0,
+    "ibu": 0,
+    "abv": 0,
+    "price": 0,
+    "buToGu": 0,
+    "bv": 0,
+    "ogPlato": 0,
+    "fgPlato": 0,
+    "abw": 0,
+    "realExtract": 0,
+    "calories": 0,
+    "bottlingTemp": 0,
+    "bottlingPressure": 0,
+    "primingCornSugar": 0,
+    "primingSugar": 0,
+    "primingHoney": 0,
+    "primingDme": 0,
+    "primaryDays": 14,
+    "primaryTemp": 20,
+    "secondaryDays": 0,
+    "secondaryTemp": 0,
+    "tertiaryDays": 0,
+    "tertiaryTemp": 0,
+    "agingDays": 14,
+    "agingTemp": 20,
+    "brewDayDuration": null,
+    "boilStartTime": null,
+    "boilEndTime": null,
+    "timelineMap": null
+  },
+  "calculated": {
+    "name": "Aramis Saison",
+    "description": "Recipe description",
+    "author": "danielgtaylor",
+    "boilSize": 11.35623,
+    "batchSize": 18.92705,
+    "servingSize": 0.355,
+    "steepEfficiency": 50,
+    "steepTime": 20,
+    "mashEfficiency": 75,
+    "style": { "og": [1, 1.15], "fg": [1, 1.15], "ibu": [0, 150], "color": [0, 500], "abv": [0, 14], "carb": [1, 4] },
+    "ibuMethod": "tinseth",
+    "fermentables": [
+      { "name": "Munich liquid extract", "weight": 2.26795, "yield": 75.7346258709, "color": 10, "late": false },
+      { "name": "Wheat liquid extract", "weight": 1.36077, "yield": 75.7346258709, "color": 3, "late": false },
+      { "name": "Pilsner malt (steeped)", "weight": 0.226795, "yield": 73.5707794175, "color": 1, "late": false },
+      { "name": "Caramunich (steeped)", "weight": 0.226795, "yield": 75.7346258709, "color": 34, "late": false },
+      { "name": "Aromatic (steeped)", "weight": 0.1133975, "yield": 73.5707794175, "color": 19, "late": false }
+    ],
+    "spices": [
+      { "name": "Aramis hops", "weight": 0.0212615166549, "aa": 8.1, "use": "Boil", "time": 60, "form": "Pellet" },
+      { "name": "Aramis hops", "weight": 0.00708717221828, "aa": 8.1, "use": "Boil", "time": 60, "form": "Pellet" }
+    ],
+    "yeast": [{ "name": "WLP560 - Classic Saison Ale Blend", "type": "Ale", "form": "Liquid", "attenuation": 84 }],
+    "mash": null,
+    "og": 1.060299762722122,
+    "fg": 1.0096479620355394,
+    "color": 10.100670100120798,
+    "ibu": 17.775037704755917,
+    "abv": 6.66787000045513,
+    "price": 33.94436787172289,
+    "buToGu": 0.29477790462738984,
+    "bv": 0.7577838165228565,
+    "ogPlato": 14.811879572286813,
+    "fgPlato": 2.4702525351549127,
+    "abw": 5.217281169705499,
+    "realExtract": 4.70161870346836,
+    "calories": 195.00369800581186,
+    "bottlingTemp": 0,
+    "bottlingPressure": 0,
+    "primingCornSugar": 0.12961975028595002,
+    "primingSugar": 0.11794749177270022,
+    "primingHoney": 0.15877900931027733,
+    "primingDme": 0.17271702105852554,
+    "primaryDays": 14,
+    "primaryTemp": 20,
+    "secondaryDays": 0,
+    "secondaryTemp": 0,
+    "tertiaryDays": 0,
+    "tertiaryTemp": 0,
+    "agingDays": 14,
+    "agingTemp": 20,
+    "brewDayDuration": null,
+    "boilStartTime": null,
+    "boilEndTime": null,
+    "timelineMap": {
+      "fermentables": {
+        "mash": [],
+        "steep": [
+          {
+            "fermentable": {
+              "name": "Pilsner malt (steeped)",
+              "weight": 0.226795,
+              "yield": 73.5707794175,
+              "color": 1,
+              "late": false
+            },
+            "gravity": 1.699993310575126
+          },
+          {
+            "fermentable": {
+              "name": "Caramunich (steeped)",
+              "weight": 0.226795,
+              "yield": 75.7346258709,
+              "color": 34,
+              "late": false
+            },
+            "gravity": 1.749993113826044
+          },
+          {
+            "fermentable": {
+              "name": "Aromatic (steeped)",
+              "weight": 0.1133975,
+              "yield": 73.5707794175,
+              "color": 19,
+              "late": false
+            },
+            "gravity": 0.849996655287563
+          }
+        ],
+        "boil": [
+          {
+            "fermentable": {
+              "name": "Munich liquid extract",
+              "weight": 2.26795,
+              "yield": 75.7346258709,
+              "color": 10,
+              "late": false
+            },
+            "gravity": 34.99986227652088
+          },
+          {
+            "fermentable": {
+              "name": "Wheat liquid extract",
+              "weight": 1.36077,
+              "yield": 75.7346258709,
+              "color": 3,
+              "late": false
+            },
+            "gravity": 20.99991736591253
+          }
+        ],
+        "boilEnd": []
+      },
+      "times": {
+        "60": [
+          {
+            "spice": {
+              "name": "Aramis hops",
+              "weight": 0.0212615166549,
+              "aa": 8.1,
+              "use": "Boil",
+              "time": 60,
+              "form": "Pellet"
+            },
+            "bitterness": 0
+          },
+          {
+            "spice": {
+              "name": "Aramis hops",
+              "weight": 0.00708717221828,
+              "aa": 8.1,
+              "use": "Boil",
+              "time": 60,
+              "form": "Pellet"
+            },
+            "bitterness": 0
+          }
+        ]
+      },
+      "drySpice": {},
+      "yeast": [{ "name": "WLP560 - Classic Saison Ale Blend", "type": "Ale", "form": "Liquid", "attenuation": 84 }]
+    }
+  },
+  "timeline": [
+    [0, "Heat 1.6l to 68°C (about 2 minutes)"],
+    [
+      1.9599340406250003,
+      "Add 0.23kg of Pilsner malt (steeped) (1.7 GU), 0.23kg of Caramunich (steeped) (1.7 GU), 0.11kg of Aromatic (steeped) (0.8 GU) and steep for 20 minutes."
+    ],
+    [21.959934040625, "Top up the wort to 11.4l and heat to a rolling boil (about 22.465802525375004 minutes)."],
+    [
+      44.425736566000005,
+      "Add 2.27kg of Munich liquid extract (35.0 GU), 1.36kg of Wheat liquid extract (21.0 GU), 21.2615166549g of Aramis hops, 7.08717221828g of Aramis hops"
+    ],
+    [104.42573656600001, "Flame out. Begin chilling to 20°C and aerate the cooled wort (about 20 minutes)."],
+    [
+      124.42573656600001,
+      "Pitch WLP560 - Classic Saison Ale Blend and seal the fermenter. You should see bubbles in the airlock within 24 hours."
+    ],
+    [20284.425736566, "Prime and bottle about 53 bottles. Age at 20C for 14 days."],
+    [40444.425736566, "Relax, don't worry and have a homebrew!"]
+  ]
+}
