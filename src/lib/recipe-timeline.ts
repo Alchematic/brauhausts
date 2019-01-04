@@ -302,7 +302,6 @@ export const computeRecipeTimeline = (recipe: Readonly<Recipe>, isSiUnits = true
     currentState = computeSteepPhase(recipe, currentState);
   }
 
-  console.log('volume before topup', currentState.volume);
   currentState = computeTopUpStep(recipe, currentState, boilName);
 
   // Removed mutation
