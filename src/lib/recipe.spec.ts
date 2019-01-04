@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import testRecipe1 from '../../testJsonFiles/test-recipe-1.json';
 import testRecipe2 from '../../testJsonFiles/test-recipe-2.json';
 import testRecipe3 from '../../testJsonFiles/test-recipe-3.json';
-import { calculateRecipe, computeRecipeTimeline, createRecipe, Recipe } from './recipe';
+import { calculateRecipe, createRecipe, Recipe } from './recipe';
 
 describe('createRecipe', () => {
   it('should create a default recipe if no args are passed', () => {
@@ -43,25 +43,5 @@ describe('calculateRecipe', () => {
     const result = calculateRecipe(recipe);
 
     expect(result).toEqual(testRecipe3.calculated);
-  });
-});
-
-describe('computeRecipeTimeline', () => {
-  it('should return the same timeline that brauhaus returns for realRecipe', () => {
-    const recipe = createRecipe(testRecipe2.original as Recipe);
-    const calculatedRecipe = calculateRecipe(recipe);
-
-    const result = computeRecipeTimeline(calculatedRecipe);
-
-    expect(result).toEqual(testRecipe2.timeline);
-  });
-
-  it('should return the same timeline that brauhaus returns for realRecipe3', () => {
-    const recipe = createRecipe(testRecipe3.original as Recipe);
-    const calculatedRecipe = calculateRecipe(recipe);
-
-    const result = computeRecipeTimeline(calculatedRecipe);
-
-    expect(result).toEqual(testRecipe3.timeline);
   });
 });

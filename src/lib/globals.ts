@@ -6,6 +6,8 @@ export const GLOBALS = {
   // is based on a large stovetop burner that would put out 2, 500 watts.
   BURNER_ENERGY: 9000,
 
+  SPECIFIC_HEAT_OF_WATER: 4.186,
+
   // Average mash heat loss per hour in degrees C
   MASH_HEAT_LOSS: 5.0,
 

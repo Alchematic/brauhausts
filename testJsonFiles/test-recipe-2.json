@@ -208,22 +208,37 @@
     }
   },
   "timeline": [
-    [0, "Heat 1.6l to 68°C (about 2 minutes)"],
-    [
-      1.9599340406250003,
-      "Add 0.23kg of Pilsner malt (steeped) (1.7 GU), 0.23kg of Caramunich (steeped) (1.7 GU), 0.11kg of Aromatic (steeped) (0.8 GU) and steep for 20 minutes."
-    ],
-    [21.959934040625, "Top up the wort to 11.4l and heat to a rolling boil (about 22.465802525375004 minutes)."],
-    [
-      44.425736566000005,
-      "Add 2.27kg of Munich liquid extract (35.0 GU), 1.36kg of Wheat liquid extract (21.0 GU), 21.2615166549g of Aramis hops, 7.08717221828g of Aramis hops"
-    ],
-    [104.42573656600001, "Flame out. Begin chilling to 20°C and aerate the cooled wort (about 20 minutes)."],
-    [
-      124.42573656600001,
-      "Pitch WLP560 - Classic Saison Ale Blend and seal the fermenter. You should see bubbles in the airlock within 24 hours."
-    ],
-    [20284.425736566, "Prime and bottle about 53 bottles. Age at 20C for 14 days."],
-    [40444.425736566, "Relax, don't worry and have a homebrew!"]
+    {
+      "instructions": "Heat 1.6l to 68°C (about 2 minutes)",
+      "time": 0
+    },
+    {
+      "instructions": "Add 0.23kg of Pilsner malt (steeped) (1.7 GU), 0.23kg of Caramunich (steeped) (1.7 GU), 0.11kg of Aromatic (steeped) (0.8 GU) and steep for 20 minutes.",
+      "time": 1.958062981875
+    },
+    {
+      "instructions": "Top up the wort to 11.4l and heat to a rolling boil (about 22.444355458525 minutes).",
+      "time": 21.958062981875
+    },
+    {
+      "instructions": "Add 2.27kg of Munich liquid extract (35.0 GU), 1.36kg of Wheat liquid extract (21.0 GU), 21.2615166549g of Aramis hops, 7.08717221828g of Aramis hops",
+      "time": 44.4024184404
+    },
+    {
+      "instructions": "Flame out. Begin chilling to 20°C and aerate the cooled wort (about 20 minutes).",
+      "time": 104.4024184404
+    },
+    {
+      "instructions": "Pitch WLP560 - Classic Saison Ale Blend and seal the fermenter. You should see bubbles in the airlock within 24 hours.",
+      "time": 124.4024184404
+    },
+    {
+      "instructions": "Prime and bottle about 53 bottles. Age at 20C for 14 days.",
+      "time": 20284.4024184404
+    },
+    {
+      "instructions": "Relax, don't worry and have a homebrew!",
+      "time": 40444.4024184404
+    }
   ]
 }

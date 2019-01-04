@@ -5,15 +5,35 @@ import { GLOBALS } from './globals';
 
 /**
  * Get the approximate time to change a volume of liquid in liters by a
- * number of degrees celcius. Degrees defaults to 80 which is about
+ * number of degrees Celsius. Temp defaults to 80 which is about
  * the temperature difference between tap water and boiling.
  * Input energy is set via BURNER_ENERGY and is measured in
  * kilojoules per hour. It defaults to an average stovetop burner.
  */
-export const computeTimeToHeat = (liters: number, degrees: number = 80) => {
-  const kj = 4.19 * liters * degrees;
+export const computeTimeToHeat = (volume: number, temp: number = 80, heatEnergy = GLOBALS.BURNER_ENERGY) => {
+  const kj = GLOBALS.SPECIFIC_HEAT_OF_WATER * volume * temp;
 
-  return (kj / GLOBALS.BURNER_ENERGY) * 60;
+  return (kj / heatEnergy) * 60;
+};
+
+// https://chemistry.stackexchange.com/questions/1240/is-there-a-way-to-calculate-how-fast-water-will-cool
+// Assume 26cm wide, 44.28 cm tall pot that can hold 5 gallons
+// All math done in meters, liters, and degrees C;
+export const computeTimeToCool = (volume: number, startTemp: number, endTemp = GLOBALS.ROOM_TEMP) => {
+  console.log({ volume, startTemp, endTemp });
+  const containerVolume = convert(5)
+    .from('gal')
+    .to('l');
+  const bottomSurfaceArea = Math.PI * 0.13 * 0.13;
+  const totalSideSurfaceArea = 0.4428 * 2 * Math.PI * 0.13;
+  const sideSurfaceArea = (volume / containerVolume) * totalSideSurfaceArea;
+
+  const surfaceArea = sideSurfaceArea + bottomSurfaceArea;
+  const thermalConductivity = -28.5; // This is the thermal conductivity of stainless steel
+  const containerThickness = 0.005; // The average thickness of a large pot (5mm)
+  const timeToTempDiff = thermalConductivity * surfaceArea * ((endTemp - startTemp) / containerThickness);
+
+  console.log(timeToTempDiff);
 };
 
 export const computeDisplayDuration = (minutes: number, approximate?: number) => {
