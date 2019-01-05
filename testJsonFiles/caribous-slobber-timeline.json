@@ -1,50 +1,62 @@
 [
   {
     "instructions": "Begin Mash Steps mash. Add 2.72kg of Amber (38.6 GU).",
-    "time": 0
+    "time": 0,
+    "phase": "mash"
   },
   {
     "instructions": "Remove grains from mash. This is now your wort.",
-    "time": 0
+    "time": 0,
+    "phase": "mash"
   },
   {
     "instructions": "Heat 0.8l to 68°C (about 1 minutes)",
-    "time": 5
+    "time": 5,
+    "phase": "steep"
   },
   {
     "instructions": "Add 0.11kg of Caramel / Crystal 80L (0.8 GU), 0.11kg of Pale Chocolate (0.8 GU), 0.06kg of Black Malt (0.4 GU) and steep for 20 minutes.",
-    "time": 5.979036606360312
+    "time": 5.979036606360312,
+    "phase": "steep"
   },
   {
     "instructions": "Top up the wort to 9.5l and heat to a rolling boil (about 19.35632165619235 minutes).",
-    "time": 25.97903660636031
+    "time": 25.97903660636031,
+    "phase": "top-up"
   },
   {
     "instructions": "Add 0.45kg of Dry Malt Extract - Amber (8.4 GU), 28.3495231g of Goldings",
-    "time": 45.33535826255266
+    "time": 45.33535826255266,
+    "phase": "boil"
   },
   {
     "instructions": "Add 28.3495231g of Liberty",
-    "time": 60.33535826255266
+    "time": 60.33535826255266,
+    "phase": "boil"
   },
   {
     "instructions": "Add 28.3495231g of Williamette",
-    "time": 90.33535826255266
+    "time": 90.33535826255266,
+    "phase": "boil"
   },
   {
     "instructions": "Flame out. Begin chilling to 20°C and aerate the cooled wort (about 20 minutes).",
-    "time": 105.33535826255266
+    "time": 105.33535826255266,
+    "phase": "chill"
   },
   {
     "instructions": "Pitch Windsor Ale Yeast and seal the fermenter. You should see bubbles in the airlock within 24 hours.",
-    "time": 125.33535826255266
+    "time": 125.33535826255266,
+    "phase": "yeast"
   },
   {
     "instructions": "Prime and bottle about 53 bottles. Age at 20C for 14 days.",
-    "time": 20285.335358262553
+    "time": 20285.335358262553,
+    "phase": "bottle"
   },
   {
     "instructions": "Relax, don't worry and have a homebrew!",
-    "time": 40445.33535826256
+    "time": 40445.33535826256,
+    "phase": "drink"
   }
 ]

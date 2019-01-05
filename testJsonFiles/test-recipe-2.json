@@ -210,35 +210,43 @@
   "timeline": [
     {
       "instructions": "Heat 1.6l to 68°C (about 2 minutes)",
-      "time": 0
+      "time": 0,
+      "phase": "steep"
     },
     {
       "instructions": "Add 0.23kg of Pilsner malt (steeped) (1.7 GU), 0.23kg of Caramunich (steeped) (1.7 GU), 0.11kg of Aromatic (steeped) (0.8 GU) and steep for 20 minutes.",
-      "time": 1.958062981875
+      "time": 1.958062981875,
+      "phase": "steep"
     },
     {
       "instructions": "Top up the wort to 11.4l and heat to a rolling boil (about 22.444355458525 minutes).",
-      "time": 21.958062981875
+      "time": 21.958062981875,
+      "phase": "top-up"
     },
     {
       "instructions": "Add 2.27kg of Munich liquid extract (35.0 GU), 1.36kg of Wheat liquid extract (21.0 GU), 21.2615166549g of Aramis hops, 7.08717221828g of Aramis hops",
-      "time": 44.4024184404
+      "time": 44.4024184404,
+      "phase": "boil"
     },
     {
       "instructions": "Flame out. Begin chilling to 20°C and aerate the cooled wort (about 20 minutes).",
-      "time": 104.4024184404
+      "time": 104.4024184404,
+      "phase": "chill"
     },
     {
       "instructions": "Pitch WLP560 - Classic Saison Ale Blend and seal the fermenter. You should see bubbles in the airlock within 24 hours.",
-      "time": 124.4024184404
+      "time": 124.4024184404,
+      "phase": "yeast"
     },
     {
       "instructions": "Prime and bottle about 53 bottles. Age at 20C for 14 days.",
-      "time": 20284.4024184404
+      "time": 20284.4024184404,
+      "phase": "bottle"
     },
     {
       "instructions": "Relax, don't worry and have a homebrew!",
-      "time": 40444.4024184404
+      "time": 40444.4024184404,
+      "phase": "drink"
     }
   ]
 }

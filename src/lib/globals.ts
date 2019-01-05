@@ -1,6 +1,7 @@
 export const GLOBALS = {
   ROOM_TEMP: 23, // Room temp in C
   DEFAULT_SPARGE_TEMP: 76,
+  MINUTES_PER_DAY: 1440,
 
   // Energy output of the stovetop or gas burner in kilojoules per hour.Default
   // is based on a large stovetop burner that would put out 2, 500 watts.
