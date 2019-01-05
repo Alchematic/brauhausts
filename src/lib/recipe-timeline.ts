@@ -131,6 +131,9 @@ const generateMashStepHeat = (step: MashStep, currentState: BrewState) => {
   };
 };
 
+/**
+ * Computes the phase in which malt sugars are released by soaking grains in water
+ */
 const computeMashPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
   const mash = createMash(recipe, currentState.temp, recipe.mash);
 
@@ -175,6 +178,9 @@ const computeMashPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => 
   return currentState;
 };
 
+/**
+ * Computes the phase in which fermentables are steeped into the wort
+ */
 const computeSteepPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
   let steepWeight = 0;
 
@@ -221,6 +227,9 @@ const computeSteepPhase = (recipe: Readonly<Recipe>, currentState: BrewState) =>
   return currentState;
 };
 
+/**
+ * Computes the phase in which any necessary water is added before bringing the wort to a boil
+ */
 const computeTopUpPhase = (recipe: Readonly<Recipe>, currentState: BrewState, boilName: string) => {
   // Adjust temperature based on added water
   const waterChangeRatio = Math.min(1, currentState.volume / recipe.boilSize);
@@ -252,6 +261,9 @@ const computeTopUpPhase = (recipe: Readonly<Recipe>, currentState: BrewState, bo
   return currentState;
 };
 
+/**
+ * Computes the phase in which the wort is brought to a boil and ingredients are boiled for a certain duration
+ */
 const computeBoilPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
   const times = _.orderBy(Object.keys(recipe.timelineMap.times), _.parseInt, 'desc');
 
@@ -294,6 +306,9 @@ const computeBoilPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => 
   return currentState;
 };
 
+/**
+ * Computes the phase in which the wort is cooled down to a certain temperature to prepare for yeast
+ */
 const computeChillPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
   const chillTemp = currentState.isSiUnits
     ? `${recipe.primaryTemp}°C`
@@ -313,6 +328,9 @@ const computeChillPhase = (recipe: Readonly<Recipe>, currentState: BrewState) =>
   return currentState;
 };
 
+/**
+ * Computes the step in which yeasts are added which will allow the wort to ferment
+ */
 const computeYeastPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
   let yeastNames = _.map(recipe.yeast, 'name');
 
