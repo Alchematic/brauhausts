@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
-import { createDefaultFermentable, Fermentable } from './fermentable';
+import { createDefaultFermentable } from './fermentable';
 import { createDefaultMash, createDefaultMashStep } from './mash';
 import { computeRecipeGrainWeight, createRecipe, Recipe } from './recipe';
-import { createDefaultSpice, Spice } from './spice';
+import { createDefaultSpice } from './spice';
 import { parseXML } from './utils';
 import { createDefaultYeast } from './yeast';
 
@@ -27,13 +27,11 @@ export const importBeerXML = async (xml: string) => {
     const fermentables = findPluralOrSingularAsArray(xmlRecipe, 'FERMENTABLES', 'FERMENTABLE');
     const yeasts = findPluralOrSingularAsArray(xmlRecipe, 'YEASTS', 'YEAST');
     const miscs = findPluralOrSingularAsArray(xmlRecipe, 'MISCS', 'MISC');
-    const waters = findPluralOrSingularAsArray(xmlRecipe, 'WATERS', 'WATER');
     // There are some weird cases here. Mashs and Styles seem to never actually be used, even though they exist
     // in the beerxml docs. They are almost always listed as a singular mash or style. For now we can't handle multiple
     const styles = findPluralOrSingularAsArray(xmlRecipe, 'STYLES', 'STYLE');
     const mashs = findPluralOrSingularAsArray(xmlRecipe, 'MASHS', 'MASH');
     const mashSteps = findPluralOrSingularAsArray(mashs, '[0].MASH_STEPS', '[0].MASH_STEP');
-    const equipments = findPluralOrSingularAsArray(xmlRecipe, 'EQUIPMENTS', 'EQUIPMENT');
 
     const overrideRecipe: Partial<Recipe> = {};
 

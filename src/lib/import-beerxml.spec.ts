@@ -1,6 +1,6 @@
 import fs from 'fs';
 import * as _ from 'lodash';
-import caribouSlobberTimeline from '../../testJsonFiles/caribous-slobber-timeline.json';
+import caribouSlobberTimeline from '../caribous-slobber-timeline.json';
 import { importBeerXML } from './import-beerxml';
 import { calculateRecipe } from './recipe';
 import { computeRecipeTimeline } from './recipe-timeline';

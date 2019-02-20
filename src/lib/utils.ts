@@ -107,23 +107,27 @@ export const parseXML = (xmlString: string): Promise<any> =>
   });
 
 export const isObjectEqualWithRoundedNums = (a: any, b: any, percentDiffMax: number): boolean =>
-  _.isEqualWith(a, b, (a: any, b: any) => {
-    if (_.isNumber(a) && _.isNumber(b)) {
-      const percentDiff = Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b));
+  _.isEqualWith(
+    a,
+    b,
+    (a: any, b: any): any => {
+      if (_.isNumber(a) && _.isNumber(b)) {
+        const percentDiff = Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b));
 
-      return percentDiff <= percentDiffMax || _.isNaN(percentDiff);
-    }
-    if (_.isString(a) && _.isString(b)) {
-      if (a === b) {
-        return true;
+        return percentDiff <= percentDiffMax || _.isNaN(percentDiff);
       }
-      const aNumbers = _.map(_.words(a, /[0-9]+\.?([0-9]+)?/g), _.toNumber);
-      const bNumbers = _.map(_.words(b, /[0-9]+\.?([0-9]+)?/g), _.toNumber);
+      if (_.isString(a) && _.isString(b)) {
+        if (a === b) {
+          return true;
+        }
+        const aNumbers = _.map(_.words(a, /[0-9]+\.?([0-9]+)?/g), _.toNumber);
+        const bNumbers = _.map(_.words(b, /[0-9]+\.?([0-9]+)?/g), _.toNumber);
 
-      if (_.size(aNumbers) === 0 || _.size(bNumbers) === 0) {
-        return false;
+        if (_.size(aNumbers) === 0 || _.size(bNumbers) === 0) {
+          return false;
+        }
+
+        return isObjectEqualWithRoundedNums(aNumbers, bNumbers, percentDiffMax);
       }
-
-      return isObjectEqualWithRoundedNums(aNumbers, bNumbers, percentDiffMax);
-    }
-  });
+    },
+  );
