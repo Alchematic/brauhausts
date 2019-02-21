@@ -8,6 +8,8 @@ import { computeIsSpiceDry, computeSpiceBitterness, computeSpicePrice, Spice } f
 import { Style } from './style';
 import { computeYeastPrice, Yeast } from './yeast';
 
+export { importBeerXML } from './import-beerxml';
+
 /**
  * A beer recipe, consisting of various ingredients and metadata which
  * provides a calculate() method to calculate OG, FG, IBU, ABV, and a

@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
-import testRecipe1 from '../../testJsonFiles/test-recipe-1.json';
-import testRecipe2 from '../../testJsonFiles/test-recipe-2.json';
-import testRecipe3 from '../../testJsonFiles/test-recipe-3.json';
+import testRecipe1 from '../test-recipe-1.json';
+import testRecipe2 from '../test-recipe-2.json';
+import testRecipe3 from '../test-recipe-3.json';
 import { calculateRecipe, createRecipe, Recipe } from './recipe';
 
 describe('createRecipe', () => {
