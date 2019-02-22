@@ -19,6 +19,7 @@ export type Recipe = {
   name: string;
   description: string;
   author: string;
+  notes: string;
   boilSize: number;
   batchSize: number;
   servingSize: number;
@@ -41,6 +42,7 @@ export type Recipe = {
   fg: number;
   est_fg: number;
   color: number;
+  est_color: number;
   ibu: number;
   abv: number;
   est_abv: number;
@@ -84,6 +86,7 @@ export const createRecipe = (overrideRecipe?: Partial<Recipe>): Recipe => {
     name: 'New Recipe',
     description: 'Recipe description',
     author: 'Anonymous Brewer',
+    notes: '',
     boilSize: 10.0,
     batchSize: 20.0,
     servingSize: 0.355,
@@ -101,6 +104,7 @@ export const createRecipe = (overrideRecipe?: Partial<Recipe>): Recipe => {
     fg: 0.0,
     est_fg: 0.0,
     color: 0.0,
+    est_color: 0.0,
     ibu: 0.0,
     abv: 0.0,
     est_abv: 0.0,
