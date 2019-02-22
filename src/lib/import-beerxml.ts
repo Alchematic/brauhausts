@@ -43,6 +43,9 @@ export const importBeerXML = async (xml: string) => {
         case 'brewer':
           overrideRecipe.author = value;
           break;
+        case 'notes':
+          overrideRecipe.notes = value;
+          break;
         case 'batch_size':
           overrideRecipe.batchSize = parseFloat(value);
           break;
@@ -81,6 +84,33 @@ export const importBeerXML = async (xml: string) => {
           break;
         case 'age_temp':
           overrideRecipe.agingTemp = parseFloat(value);
+          break;
+        case 'ibu':
+          overrideRecipe.ibu = parseFloat(value);
+          break;
+        case 'og':
+          overrideRecipe.og = parseFloat(value);
+          break;
+        case 'est_og':
+          overrideRecipe.est_og = parseFloat(value);
+          break;
+        case 'fg':
+          overrideRecipe.fg = parseFloat(value);
+          break;
+        case 'est_fg':
+          overrideRecipe.est_fg = parseFloat(value);
+          break;
+        case 'color':
+          overrideRecipe.color = parseFloat(value);
+          break;
+        case 'est_color':
+          overrideRecipe.est_color = parseFloat(value);
+          break;
+        case 'abv':
+          overrideRecipe.abv = parseFloat(value);
+          break;
+        case 'est_abv':
+          overrideRecipe.est_abv = parseFloat(value);
           break;
       }
     });
