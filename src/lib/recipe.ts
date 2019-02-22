@@ -37,10 +37,13 @@ export type Recipe = {
   mash: Mash;
 
   og: number;
+  est_og: number;
   fg: number;
+  est_fg: number;
   color: number;
   ibu: number;
   abv: number;
+  est_abv: number;
   price: number;
 
   buToGu: number; // Bitterness to gravity ratio
@@ -94,10 +97,13 @@ export const createRecipe = (overrideRecipe?: Partial<Recipe>): Recipe => {
     yeast: [],
     mash: null,
     og: 0.0,
+    est_og: 0.0,
     fg: 0.0,
+    est_fg: 0.0,
     color: 0.0,
     ibu: 0.0,
     abv: 0.0,
+    est_abv: 0.0,
     price: 0.0,
     buToGu: 0.0,
     bv: 0.0,
