@@ -8,6 +8,7 @@ import { computeIsDrySpice, computeSpiceBitterness, computeSpicePrice, Spice } f
 import { Style } from './style';
 import { lowerCaseIncludes } from './utils';
 import { computeYeastPrice, Yeast } from './yeast';
+export { importBeerXML } from './import-beerxml';
 
 export enum RecipeType {
   EXTRACT = 'Extract',
@@ -31,6 +32,7 @@ export type Recipe = {
   description: string;
   type: RecipeType;
   author: string;
+  notes: string;
   boilSize: number;
   batchSize: number;
   servingSize: number;
@@ -49,10 +51,14 @@ export type Recipe = {
   mash: Mash;
 
   og: number;
+  est_og: number;
   fg: number;
+  est_fg: number;
   color: number;
+  est_color: number;
   ibu: number;
   abv: number;
+  est_abv: number;
   price: number;
 
   buToGu: number; // Bitterness to gravity ratio
@@ -94,6 +100,7 @@ export const createRecipe = (overrideRecipe?: Partial<Recipe>): Recipe => {
     description: 'Recipe description',
     type: RecipeType.EXTRACT,
     author: 'Anonymous Brewer',
+    notes: '',
     boilSize: 10.0,
     batchSize: 20.0,
     servingSize: 0.355,
@@ -107,10 +114,14 @@ export const createRecipe = (overrideRecipe?: Partial<Recipe>): Recipe => {
     yeast: [],
     mash: null,
     og: 0.0,
+    est_og: 0.0,
     fg: 0.0,
+    est_fg: 0.0,
     color: 0.0,
+    est_color: 0.0,
     ibu: 0.0,
     abv: 0.0,
+    est_abv: 0.0,
     price: 0.0,
     buToGu: 0.0,
     bv: 0.0,

@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
-import { createDefaultFermentable, Fermentable } from './fermentable';
+import { createDefaultFermentable } from './fermentable';
 import { createDefaultMash, createDefaultMashStep } from './mash';
-import { computeRecipeGrainWeight, createRecipe, Recipe, RecipeType, RecipeTypeMap } from './recipe';
-import { createDefaultSpice, Spice } from './spice';
+import { computeRecipeGrainWeight, createRecipe, Recipe, RecipeTypeMap } from './recipe';
+import { createDefaultSpice } from './spice';
 import { parseXML } from './utils';
 import { createDefaultYeast } from './yeast';
 
@@ -27,13 +27,12 @@ export const importBeerXML = async (xml: string) => {
     const fermentables = findPluralOrSingularAsArray(xmlRecipe, 'FERMENTABLES', 'FERMENTABLE');
     const yeasts = findPluralOrSingularAsArray(xmlRecipe, 'YEASTS', 'YEAST');
     const miscs = findPluralOrSingularAsArray(xmlRecipe, 'MISCS', 'MISC');
-    const waters = findPluralOrSingularAsArray(xmlRecipe, 'WATERS', 'WATER');
     // There are some weird cases here. Mashs and Styles seem to never actually be used, even though they exist
     // in the beerxml docs. They are almost always listed as a singular mash or style. For now we can't handle multiple
     const styles = findPluralOrSingularAsArray(xmlRecipe, 'STYLES', 'STYLE');
     const mashs = findPluralOrSingularAsArray(xmlRecipe, 'MASHS', 'MASH');
     const mashSteps = _.map(_.map(mashs, 'MASH_STEPS'), step => step.MASH_STEP);
-    const equipments = findPluralOrSingularAsArray(xmlRecipe, 'EQUIPMENTS', 'EQUIPMENT');
+    // const equipments = findPluralOrSingularAsArray(xmlRecipe, 'EQUIPMENTS', 'EQUIPMENT');
 
     const overrideRecipe: Partial<Recipe> = {};
 
@@ -47,6 +46,9 @@ export const importBeerXML = async (xml: string) => {
           break;
         case 'type':
           overrideRecipe.type = RecipeTypeMap[value as keyof typeof RecipeTypeMap];
+          break;
+        case 'notes':
+          overrideRecipe.notes = value;
           break;
         case 'batch_size':
           overrideRecipe.batchSize = parseFloat(value);
@@ -86,6 +88,33 @@ export const importBeerXML = async (xml: string) => {
           break;
         case 'age_temp':
           overrideRecipe.agingTemp = parseFloat(value);
+          break;
+        case 'ibu':
+          overrideRecipe.ibu = parseFloat(value);
+          break;
+        case 'og':
+          overrideRecipe.og = parseFloat(value);
+          break;
+        case 'est_og':
+          overrideRecipe.est_og = parseFloat(value);
+          break;
+        case 'fg':
+          overrideRecipe.fg = parseFloat(value);
+          break;
+        case 'est_fg':
+          overrideRecipe.est_fg = parseFloat(value);
+          break;
+        case 'color':
+          overrideRecipe.color = parseFloat(value);
+          break;
+        case 'est_color':
+          overrideRecipe.est_color = parseFloat(value);
+          break;
+        case 'abv':
+          overrideRecipe.abv = parseFloat(value);
+          break;
+        case 'est_abv':
+          overrideRecipe.est_abv = parseFloat(value);
           break;
       }
     });
