@@ -1,5 +1,6 @@
 {
   "original": {
+    "type": "Extract",
     "fermentables": [{ "name": "Extra pale extract", "weight": 4, "yield": 75, "color": 2.5, "late": false }],
     "spices": [
       { "name": "Cascade hops", "weight": 0.028349556839727483, "aa": 4.5, "use": "boil", "time": 60, "form": "pellet" }
@@ -52,6 +53,7 @@
   "calculated": {
     "name": "Test Recipe",
     "description": "Recipe description",
+    "type": "Extract",
     "author": "Anonymous Brewer",
     "boilSize": 10,
     "batchSize": 20,

@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { createDefaultFermentable, Fermentable } from './fermentable';
 import { createDefaultMash, createDefaultMashStep } from './mash';
-import { computeRecipeGrainWeight, createRecipe, Recipe } from './recipe';
+import { computeRecipeGrainWeight, createRecipe, Recipe, RecipeType, RecipeTypeMap } from './recipe';
 import { createDefaultSpice, Spice } from './spice';
 import { parseXML } from './utils';
 import { createDefaultYeast } from './yeast';
@@ -32,7 +32,7 @@ export const importBeerXML = async (xml: string) => {
     // in the beerxml docs. They are almost always listed as a singular mash or style. For now we can't handle multiple
     const styles = findPluralOrSingularAsArray(xmlRecipe, 'STYLES', 'STYLE');
     const mashs = findPluralOrSingularAsArray(xmlRecipe, 'MASHS', 'MASH');
-    const mashSteps = findPluralOrSingularAsArray(mashs, '[0].MASH_STEPS', '[0].MASH_STEP');
+    const mashSteps = _.map(_.map(mashs, 'MASH_STEPS'), step => step.MASH_STEP);
     const equipments = findPluralOrSingularAsArray(xmlRecipe, 'EQUIPMENTS', 'EQUIPMENT');
 
     const overrideRecipe: Partial<Recipe> = {};
@@ -44,6 +44,9 @@ export const importBeerXML = async (xml: string) => {
           break;
         case 'brewer':
           overrideRecipe.author = value;
+          break;
+        case 'type':
+          overrideRecipe.type = RecipeTypeMap[value as keyof typeof RecipeTypeMap];
           break;
         case 'batch_size':
           overrideRecipe.batchSize = parseFloat(value);
@@ -173,29 +176,17 @@ export const importBeerXML = async (xml: string) => {
     });
 
     overrideRecipe.spices = _.map(_.concat(hops, miscs), spice => {
-      const newSpice = createDefaultSpice();
-      _.each(spice, (spiceValue, spiceKey) => {
-        switch (spiceKey.toLowerCase()) {
-          case 'name':
-            newSpice.name = spiceValue;
-            break;
-          case 'amount':
-            newSpice.weight = parseFloat(spiceValue);
-            break;
-          case 'alpha':
-            newSpice.aa = parseFloat(spiceValue);
-            break;
-          case 'use':
-            newSpice.use = spiceValue;
-            break;
-          case 'form':
-            newSpice.form = spiceValue;
-            break;
-          case 'time':
-            newSpice.time = spiceValue;
-            break;
-        }
-      });
+      const newSpice = _.defaults(
+        {
+          name: spice.NAME,
+          weight: parseFloat(spice.AMOUNT) || undefined,
+          aa: parseFloat(spice.ALPHA) || undefined,
+          use: spice.USE,
+          form: spice.FORM,
+          time: spice.TIME,
+        },
+        createDefaultSpice(),
+      );
 
       return newSpice;
     });

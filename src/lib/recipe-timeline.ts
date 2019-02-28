@@ -1,6 +1,6 @@
 import convert from 'convert-units';
 import * as _ from 'lodash';
-import { Fermentable } from './fermentable';
+import { Fermentable, FermentableType } from './fermentable';
 import { GLOBALS } from './globals';
 import { computeMashStepDescription, createMash, MashStep } from './mash';
 import { computeRecipeGrainWeight, Recipe } from './recipe';
@@ -15,12 +15,7 @@ export type TimelineMap = {
   yeast: Yeast[];
 };
 
-type TimelineFermentables = {
-  mash: TimelineFermentable[];
-  steep: TimelineFermentable[];
-  boil: TimelineFermentable[];
-  boilEnd: TimelineFermentable[];
-};
+type TimelineFermentables = { [key in FermentableType]: TimelineFermentable[] };
 
 type TimelineFermentable = {
   fermentable: Fermentable;
@@ -50,7 +45,14 @@ const computeRecipeServings = (recipe: Recipe) => Math.floor(recipe.batchSize / 
  */
 const createFermentableIngredientList = (fermentables: TimelineFermentable[], isSiUnits = true) =>
   _.map(fermentables, ({ fermentable, gravity }) => {
-    const weight = isSiUnits ? `${fermentable.weight.toFixed(2)}kg` : convertKgToLbOz(fermentable.weight);
+    let siWeight = `${fermentable.weight.toFixed(2)}kg`;
+    if (siWeight === '0.00kg') {
+      siWeight = `${convert(fermentable.weight)
+        .from('kg')
+        .to('g')
+        .toFixed(2)}g`;
+    }
+    const weight = isSiUnits ? siWeight : convertKgToLbOz(fermentable.weight);
 
     return `${weight} of ${fermentable.name} (${gravity.toFixed(1)} GU)`;
   });
@@ -135,6 +137,9 @@ const generateMashStepHeat = (step: MashStep, currentState: BrewState) => {
  * Computes the phase in which malt sugars are released by soaking grains in water
  */
 const computeMashPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
+  if (_.isEmpty(recipe.timelineMap.fermentables.mash)) {
+    return currentState;
+  }
   const mash = createMash(recipe, currentState.temp, recipe.mash);
 
   const ingredients = createFermentableIngredientList(recipe.timelineMap.fermentables.mash);
@@ -149,7 +154,7 @@ const computeMashPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => 
   _.each(steps, step => {
     const strikeVolume = step.waterRatio * computeRecipeGrainWeight(recipe) - currentState.volume;
 
-    if (step.temp !== currentState.temp && strikeVolume > 0) {
+    if (step.temp !== currentState.temp && strikeVolume !== 0) {
       currentState = generateMashStepVolumeAdd(step, recipe, strikeVolume, currentState);
     } else if (step.temp !== currentState.temp) {
       currentState = generateMashStepHeat(step, currentState);
@@ -178,19 +183,42 @@ const computeMashPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => 
   return currentState;
 };
 
+const computeSteepVolume = (steepWeight: number, minTotalLiters: number) => {
+  const MAX_STEEP_LITERS_PER_KG = 4;
+  const STEEP_LITERS_PER_KG = 2.75;
+  const steepVolume = steepWeight * STEEP_LITERS_PER_KG;
+  // Check for a really low steep volume and increase it if we can without affecting the output
+  if (steepVolume < minTotalLiters) {
+    const newSteepVolume = 2;
+    if (newSteepVolume / steepWeight < MAX_STEEP_LITERS_PER_KG) {
+      return newSteepVolume;
+    } else {
+      const maxSteepVolume = steepWeight * MAX_STEEP_LITERS_PER_KG;
+
+      return maxSteepVolume;
+    }
+  }
+
+  return steepVolume;
+};
+
 /**
  * Computes the phase in which fermentables are steeped into the wort
  */
 const computeSteepPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
+  if (_.isEmpty(recipe.timelineMap.fermentables.steep)) {
+    return currentState;
+  }
+
   let steepWeight = 0;
 
   _.each(recipe.timelineMap.fermentables.steep, ({ fermentable }) => {
     steepWeight += fermentable.weight;
   });
 
-  const STEEP_LITERS_PER_KG = 2.75;
+  const MIN_TOTAL_LITERS = 2;
+  const steepVolume = computeSteepVolume(steepWeight, MIN_TOTAL_LITERS);
   const STEEP_TEMP = 68;
-  const steepVolume = steepWeight * STEEP_LITERS_PER_KG;
 
   const steepHeatTime = computeTimeToHeat(steepVolume, STEEP_TEMP - currentState.temp);
   currentState.temp = STEEP_TEMP;
@@ -202,16 +230,20 @@ const computeSteepPhase = (recipe: Readonly<Recipe>, currentState: BrewState) =>
         .from('l')
         .to('gal')
         .toFixed(1)}gal`;
-  const steepTemp = currentState.isSiUnits
+  const steepTempText = currentState.isSiUnits
     ? `${STEEP_TEMP}°C`
     : `${convert(STEEP_TEMP)
         .from('C')
         .to('F')
         .toFixed(1)}°F`;
 
+  const smallPotText =
+    steepVolume < MIN_TOTAL_LITERS ? ` You may want to use a small, clean, and sanitized pot for steeping.` : '';
   currentState.timeline.push({
     time: currentState.time,
-    instructions: `Heat ${steepVolumeText} to ${steepTemp} (about ${Math.round(steepHeatTime)} minutes)`,
+    instructions: `Heat ${steepVolumeText} to ${steepTempText} (about ${Math.round(
+      steepHeatTime,
+    )} minutes).${smallPotText}`,
     phase: 'steep',
   });
   currentState.time += steepHeatTime;
@@ -230,7 +262,7 @@ const computeSteepPhase = (recipe: Readonly<Recipe>, currentState: BrewState) =>
 /**
  * Computes the phase in which any necessary water is added before bringing the wort to a boil
  */
-const computeTopUpPhase = (recipe: Readonly<Recipe>, currentState: BrewState, boilName: string) => {
+const computeTopUpPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
   // Adjust temperature based on added water
   const waterChangeRatio = Math.min(1, currentState.volume / recipe.boilSize);
   currentState.temp = currentState.temp * waterChangeRatio + GLOBALS.ROOM_TEMP * (1.0 - waterChangeRatio);
@@ -246,7 +278,7 @@ const computeTopUpPhase = (recipe: Readonly<Recipe>, currentState: BrewState, bo
   // ^ That's equivalent to currentState.volume > 0
   const action =
     currentState.volume > 0
-      ? `Top up the ${boilName} to ${boilVolume} and heat to a rolling boil`
+      ? `Top up the wort to ${boilVolume} and heat to a rolling boil`
       : `Bring ${boilVolume} to a rolling boil`;
 
   const boilTime = computeTimeToHeat(recipe.boilSize, 100 - currentState.temp);
@@ -354,66 +386,15 @@ const computeYeastPhase = (recipe: Readonly<Recipe>, currentState: BrewState) =>
   return currentState;
 };
 
-/**
- * Compute a recipe's timeline of instructions. These are done in phases:
- * Mash - Optional - The phase in which malt sugars are released by soaking grains in water
- * Steep - Optional - The phase in which fermentables are steeped into the wort
- * Top-Up - The phase in which any necessary water is added before bringing the wort to a boil
- * Boil - The phase in which the wort is brought to a boil and ingredients are boiled for a certain duration
- * Chill - The phase in which the wort is cooled down to a certain temperature to prepare for yeast
- * Yeast - The step in which yeasts are added which will allow the wort to ferment
- * Ferment - The step in which the beer is allowed to ferment
- * Bottle - The phase in which the beer is primed and bottled
- * Drink - The best and final phase
- */
-export const computeRecipeTimeline = (recipe: Readonly<Recipe>, isSiUnits = true) => {
-  let boilName = 'water';
-  let currentState: BrewState = {
-    timeline: [],
-    time: 0,
-    temp: GLOBALS.ROOM_TEMP,
-    volume: 0,
-    isSiUnits: isSiUnits,
-  };
-
-  if (_.size(recipe.timelineMap.fermentables.mash) > 0) {
-    boilName = 'wort';
-    currentState = computeMashPhase(recipe, currentState);
-  }
-
-  if (recipe.timelineMap.fermentables.steep.length) {
-    boilName = 'wort';
-    currentState = computeSteepPhase(recipe, currentState);
-  }
-
-  currentState = computeTopUpPhase(recipe, currentState, boilName);
-
-  // Removed mutation
-  // recipe.boilStartTime = currentState.time;
-
-  currentState = computeBoilPhase(recipe, currentState);
-
-  // Removed mutation
-  // recipe.boilEndTime = currentState.time;
-
-  currentState = computeChillPhase(recipe, currentState);
-
-  currentState = computeYeastPhase(recipe, currentState);
-
-  // The brew day is over! Fermenting starts now.
-  // Removed mutation
-  // recipe.brewDayDuration = currentState.time;
-
-  if (!recipe.primaryDays && !recipe.secondaryDays && !recipe.tertiaryDays) {
+const computeFermentPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
+  if (!recipe.primaryDays) {
     currentState.timeline.push({
       time: currentState.time,
-      instructions: `Drink immediately (about ${computeRecipeServings(recipe)} bottles).`,
-      phase: 'drink',
+      instructions: 'This recipe does not have a set time to ferment. This has been automatically changed to 14 days.',
+      phase: 'ferment',
     });
-
-    return currentState.timeline;
+    currentState.time += 14 * GLOBALS.MINUTES_PER_DAY;
   }
-
   currentState.time += recipe.primaryDays * GLOBALS.MINUTES_PER_DAY;
 
   if (recipe.secondaryDays) {
@@ -427,6 +408,7 @@ export const computeRecipeTimeline = (recipe: Readonly<Recipe>, isSiUnits = true
     });
     currentState.time += recipe.secondaryDays * GLOBALS.MINUTES_PER_DAY;
   }
+
   if (recipe.tertiaryDays) {
     currentState.timeline.push({
       time: currentState.time,
@@ -438,11 +420,53 @@ export const computeRecipeTimeline = (recipe: Readonly<Recipe>, isSiUnits = true
     });
     currentState.time += recipe.tertiaryDays * GLOBALS.MINUTES_PER_DAY;
   }
-  let primeMsg = `Prime and bottle about ${computeRecipeServings(recipe)} bottles.`;
 
+  return currentState;
+};
+
+/**
+ * Computes the step in which we add hops directly to the fermented beer
+ */
+const computeDryHopPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
+  const times = _.orderBy(Object.keys(recipe.timelineMap.drySpice), _.parseInt, 'desc');
+
+  // Add fermentables that need to be boiled for a certain amount of time.
+  let previousSpiceTime = 0;
+  _.each(times, unparsedTime => {
+    const time = parseInt(unparsedTime);
+    const ingredients = createSpiceIngredientList(recipe.timelineMap.drySpice[time]);
+
+    currentState.time += previousSpiceTime - time;
+
+    previousSpiceTime = time;
+
+    currentState.timeline.push({
+      time: currentState.time,
+      instructions: `Dry Hop ${ingredients.join(', ')}`,
+      phase: 'dry hop',
+    });
+  });
+
+  currentState.time += previousSpiceTime;
+
+  return currentState;
+};
+
+const computeBottlePhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
+  const numBottles = computeRecipeServings(recipe);
+  currentState.timeline.push({
+    time: currentState.time,
+    instructions: `Prime and bottle about ${numBottles} bottles.`,
+    phase: 'bottle',
+  });
+
+  return currentState;
+};
+
+const computeAgingPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
   if (recipe.agingDays) {
     let ageTemp = '';
-    if (isSiUnits) {
+    if (currentState.isSiUnits) {
       ageTemp = `${recipe.agingTemp}C`;
     } else {
       ageTemp = `${convert(recipe.agingTemp)
@@ -450,16 +474,71 @@ export const computeRecipeTimeline = (recipe: Readonly<Recipe>, isSiUnits = true
         .to('F')}F`;
     }
 
-    primeMsg += ` Age at ${ageTemp} for ${recipe.agingDays} days.`;
+    currentState.timeline.push({
+      time: currentState.time,
+      instructions: `Age at ${ageTemp} for ${recipe.agingDays} days.`,
+      phase: 'aging',
+    });
+    currentState.time += recipe.agingDays * GLOBALS.MINUTES_PER_DAY;
   }
-  currentState.timeline.push({ time: currentState.time, instructions: primeMsg, phase: 'bottle' });
-  currentState.time += recipe.agingDays * GLOBALS.MINUTES_PER_DAY;
 
+  return currentState;
+};
+
+const computeDrinkPhase = (currentState: BrewState) => {
   currentState.timeline.push({
     time: currentState.time,
     instructions: "Relax, don't worry and have a homebrew!",
     phase: 'drink',
   });
+
+  return currentState;
+};
+
+/**
+ * Compute a recipe's timeline of instructions. These are done in phases:
+ * Mash - Optional - The phase in which malt sugars are released by soaking grains in water
+ * Steep - Optional - The phase in which fermentables are steeped into the wort
+ * Top-Up - The phase in which any necessary water is added before bringing the wort to a boil
+ * Boil - The phase in which the wort is brought to a boil and ingredients are boiled for a certain duration
+ * Chill - The phase in which the wort is cooled down to a certain temperature to prepare for yeast
+ * Yeast - The step in which yeasts are added which will allow the wort to ferment
+ * Ferment - The step in which the beer is allowed to ferment
+ * Dry Spice - Optional - The step in which we add hops directly to the fermented beer
+ * Bottle - The phase in which the beer is primed and bottled
+ * Aging - The phase in which we let the beer sit and carbonate
+ * Drink - The best and final phase
+ */
+export const computeRecipeTimeline = (recipe: Readonly<Recipe>, isSiUnits = true) => {
+  let currentState: BrewState = {
+    timeline: [],
+    time: 0,
+    temp: GLOBALS.ROOM_TEMP,
+    volume: 0,
+    isSiUnits,
+  };
+
+  currentState = computeMashPhase(recipe, currentState);
+
+  currentState = computeSteepPhase(recipe, currentState);
+
+  currentState = computeTopUpPhase(recipe, currentState);
+
+  currentState = computeBoilPhase(recipe, currentState);
+
+  currentState = computeChillPhase(recipe, currentState);
+
+  currentState = computeYeastPhase(recipe, currentState);
+
+  currentState = computeFermentPhase(recipe, currentState);
+
+  currentState = computeDryHopPhase(recipe, currentState);
+
+  currentState = computeBottlePhase(recipe, currentState);
+
+  currentState = computeAgingPhase(recipe, currentState);
+
+  currentState = computeDrinkPhase(currentState);
 
   return currentState.timeline;
 };

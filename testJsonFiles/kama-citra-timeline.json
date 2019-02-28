@@ -1,0 +1,77 @@
+[
+  {
+    "instructions": "Begin Mash Steps mash. Add 4.08kg of Pale 2-Row (45.6 GU), 0.45kg of Caramel / Crystal 40L (3.1 GU), 2.11g of Lactic Acid (0.0 GU).",
+    "phase": "mash",
+    "time": 0
+  },
+  {
+    "instructions": "Heat 14.2l to 73°C (about 25 minutes)",
+    "phase": "mash",
+    "time": 0
+  },
+  {
+    "instructions": "Strike temp=163.6F: Infuse 14.2l for 60 minutes at 66.666666666667C.",
+    "phase": "mash",
+    "time": 25
+  },
+  {
+    "instructions": "Remove grains from mash. This is now your wort.",
+    "phase": "mash",
+    "time": 85
+  },
+  {
+    "instructions": "Top up the wort to 25.6l and heat to a rolling boil (about 50 minutes).",
+    "phase": "top-up",
+    "time": 90
+  },
+  {
+    "instructions": "Add 21.262142325g of Centennial",
+    "phase": "boil",
+    "time": 140
+  },
+  {
+    "instructions": "Add 28.3495231g of Cascade",
+    "phase": "boil",
+    "time": 180
+  },
+  {
+    "instructions": "Add 28.3495231g of Cascade, 1000g of Whirlfloc, 2.46446g of Fermax",
+    "phase": "boil",
+    "time": 190
+  },
+  {
+    "instructions": "Add 56.6990462g of Citra, 7.087380775g of Centennial",
+    "phase": "boil",
+    "time": 200
+  },
+  {
+    "instructions": "Flame out. Begin chilling to 18.333333333333°C and aerate the cooled wort (about 20 minutes).",
+    "phase": "chill",
+    "time": 200
+  },
+  {
+    "instructions": "Pitch San Diego Super Yeast WLP090 and seal the fermenter. You should see bubbles in the airlock within 24 hours.",
+    "phase": "yeast",
+    "time": 220
+  },
+  {
+    "instructions": "Dry Hop 28.3495231g of Citra, 28.3495231g of Cascade",
+    "phase": "dry hop",
+    "time": 13180
+  },
+  {
+    "instructions": "Prime and bottle about 58 bottles.",
+    "phase": "bottle",
+    "time": 20380
+  },
+  {
+    "instructions": "Age at 20C for 14 days.",
+    "phase": "aging",
+    "time": 20380
+  },
+  {
+    "instructions": "Relax, don't worry and have a homebrew!",
+    "phase": "drink",
+    "time": 40540
+  }
+]

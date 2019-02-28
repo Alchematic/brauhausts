@@ -14,6 +14,18 @@ export type Mash = {
   steps: Array<MashStep>;
 };
 
+// Default to a basic 60 minute single-infusion mash at 68C
+export const createDefaultMashStep = (recipe?: Recipe, recipeCurrentTemp?: number): MashStep => ({
+  name: 'Saccharification',
+  type: MashStepType.Infusion,
+  waterRatio: 2.75,
+  temp: 68,
+  endTemp: null,
+  time: 60,
+  rampTime:
+    recipe && recipeCurrentTemp ? computeTimeToHeat(computeRecipeGrainWeight(recipe), 68 - recipeCurrentTemp) : null,
+});
+
 export const createDefaultMash = (): Mash => ({
   steps: [],
   name: '',
@@ -25,19 +37,7 @@ export const createDefaultMash = (): Mash => ({
 
 export const createMash = (recipe: Recipe, recipeCurrentTemp: number, overrideMash?: Partial<Mash>): Mash => {
   const newMash: Mash = createDefaultMash();
-
-  newMash.steps = [
-    // Default to a basic 60 minute single-infusion mash at 68C
-    {
-      name: 'Saccharification',
-      type: MashStepType.Infusion,
-      time: 60,
-      rampTime: computeTimeToHeat(computeRecipeGrainWeight(recipe), 68 - recipeCurrentTemp),
-      temp: 68,
-      endTemp: null,
-      waterRatio: 2.75,
-    },
-  ];
+  newMash.steps = [createDefaultMashStep(recipe, recipeCurrentTemp)];
 
   return _.assign(newMash, overrideMash);
 };
@@ -100,18 +100,3 @@ export type MashStep = {
   endTemp: number;
   waterRatio: number;
 };
-
-export const createDefaultMashStep = (): MashStep => ({
-  name: 'Saccharification',
-
-  type: MashStepType.Infusion,
-
-  waterRatio: 3.0,
-
-  temp: 68.0,
-  endTemp: null,
-
-  time: 60,
-
-  rampTime: null,
-});

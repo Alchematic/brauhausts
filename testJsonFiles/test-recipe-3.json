@@ -9,6 +9,7 @@
     ],
     "yeast": [{ "name": "Wyeast 3052", "type": "ale", "form": "liquid", "attenuation": 74 }],
     "name": "Test Recipe",
+    "type": "Extract",
     "batchSize": 20,
     "primaryDays": 10,
     "secondaryDays": 5,
@@ -54,6 +55,7 @@
   },
   "calculated": {
     "name": "Test Recipe",
+    "type": "Extract",
     "description": "Recipe description",
     "author": "Anonymous Brewer",
     "boilSize": 10,
@@ -141,49 +143,54 @@
   },
   "timeline": [
     {
-      "instructions": "Heat 1.4l to 68°C (about 2 minutes)",
-      "time": 0,
-      "phase": "steep"
+      "instructions": "Heat 2.0l to 68°C (about 4 minutes).",
+      "phase": "steep",
+      "time": 0
     },
     {
       "instructions": "Add 0.50kg of Caramel 40L (3.6 GU) and steep for 20 minutes.",
-      "time": 1.726725,
-      "phase": "steep"
+      "phase": "steep",
+      "time": 4
     },
     {
-      "instructions": "Top up the wort to 10.0l and heat to a rolling boil (about 19.761408333333332 minutes).",
-      "time": 21.726725000000002,
-      "phase": "top-up"
+      "instructions": "Top up the wort to 10.0l and heat to a rolling boil (about 24 minutes).",
+      "phase": "top-up",
+      "time": 24
     },
     {
       "instructions": "Add 4.00kg of Extra pale extract (57.9 GU), 28.349556839727484g of Cascade hops",
-      "time": 41.48813333333334,
-      "phase": "boil"
+      "phase": "boil",
+      "time": 48
     },
     {
       "instructions": "Flame out. Begin chilling to 20°C and aerate the cooled wort (about 20 minutes).",
-      "time": 101.48813333333334,
-      "phase": "chill"
+      "phase": "chill",
+      "time": 108
     },
     {
       "instructions": "Pitch Wyeast 3052 and seal the fermenter. You should see bubbles in the airlock within 24 hours.",
-      "time": 121.48813333333334,
-      "phase": "yeast"
+      "phase": "yeast",
+      "time": 128
     },
     {
       "instructions": "Move to secondary fermenter for 5 days.",
-      "time": 14521.488133333334,
-      "phase": "ferment"
+      "phase": "ferment",
+      "time": 14528
     },
     {
-      "instructions": "Prime and bottle about 56 bottles. Age at 20C for 14 days.",
-      "time": 21721.488133333332,
-      "phase": "bottle"
+      "instructions": "Prime and bottle about 56 bottles.",
+      "phase": "bottle",
+      "time": 21728
+    },
+    {
+      "instructions": "Age at 20C for 14 days.",
+      "phase": "aging",
+      "time": 21728
     },
     {
       "instructions": "Relax, don't worry and have a homebrew!",
-      "time": 41881.48813333333,
-      "phase": "drink"
+      "phase": "drink",
+      "time": 41888
     }
   ]
 }

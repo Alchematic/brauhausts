@@ -1,5 +1,6 @@
 import convert from 'convert-units';
 import { GLOBALS } from './globals';
+import { RecipeType } from './recipe';
 import { yieldToPpg } from './utils';
 
 export type Fermentable = {
@@ -35,15 +36,43 @@ export const computeFermentablePrice = (fermentable: Fermentable) => {
   return fermentable.weight * pricePerKg;
 };
 
-export const computeFermentableAddition = (fermentable: Fermentable) =>
-  /mash/i.test(fermentable.name)
-    ? 'mash'
+export enum FermentableType {
+  MASH = 'mash',
+  STEEP = 'steep',
+  BOIL = 'boil',
+  BOIL_END = 'boilEnd',
+}
+
+/**
+ * Computes the fermentable type based on the name. Then checks the recipe type to determine if it should be switched.
+ * Fermentables switching rules are:
+ *   - A mash fermentable found in an extract recipe should become a boil fermentable.
+ *   - A steep fermentable found in a partial mash or all grain recipe should become a mash fermentable.
+ */
+export const computeFermentableType = (fermentable: Fermentable, recipeType?: RecipeType) => {
+  const fermentableType = /mash/i.test(fermentable.name)
+    ? FermentableType.MASH
     : /steep/i.test(fermentable.name)
-    ? 'steep'
+    ? FermentableType.STEEP
     : /boil/i.test(fermentable.name)
-    ? 'boil'
+    ? FermentableType.BOIL
     : GLOBALS.FERMENTABLE_BOIL_REGEX.test(fermentable.name)
-    ? 'boil'
+    ? FermentableType.BOIL
     : GLOBALS.FERMENTABLE_STEEP_REGEX.test(fermentable.name)
-    ? 'steep'
-    : 'mash';
+    ? FermentableType.STEEP
+    : FermentableType.MASH;
+
+  const isMashInExtractRecipe = recipeType === RecipeType.EXTRACT && fermentableType === FermentableType.MASH;
+  if (isMashInExtractRecipe || fermentableType === FermentableType.BOIL) {
+    return fermentable.late ? FermentableType.BOIL_END : FermentableType.BOIL;
+  }
+
+  const isSteepInMashRecipe =
+    (recipeType === RecipeType.PARTIAL_MASH || recipeType === RecipeType.ALL_GRAIN) &&
+    fermentableType === FermentableType.STEEP;
+  if (isSteepInMashRecipe) {
+    return FermentableType.MASH;
+  }
+
+  return fermentableType;
+};
