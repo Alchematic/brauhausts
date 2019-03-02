@@ -1,0 +1,125 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`computeRecipeTimeline should return the same timeline that brauhaus returns for realRecipe2 1`] = `
+Array [
+  Object {
+    "duration": 4,
+    "instructions": "Heat 2.0l to 68°C (about 4 minutes).",
+    "phase": "steep",
+    "time": 0,
+  },
+  Object {
+    "duration": 20,
+    "instructions": "Add 0.23kg of Pilsner malt (steeped) (1.7 GU), 0.23kg of Caramunich (steeped) (1.7 GU), 0.11kg of Aromatic (steeped) (0.8 GU) and steep for 20 minutes.",
+    "phase": "steep",
+    "time": 4,
+  },
+  Object {
+    "duration": 28,
+    "instructions": "Top up the wort to 11.4l and heat to a rolling boil (about 28 minutes).",
+    "phase": "top-up",
+    "time": 24,
+  },
+  Object {
+    "duration": 60,
+    "instructions": "Add 2.27kg of Munich liquid extract (35.0 GU), 1.36kg of Wheat liquid extract (21.0 GU), 21.2615166549g of Aramis hops, 7.08717221828g of Aramis hops",
+    "phase": "boil",
+    "time": 52,
+  },
+  Object {
+    "duration": 20,
+    "instructions": "Flame out. Begin chilling to 20°C and aerate the cooled wort (about 20 minutes).",
+    "phase": "chill",
+    "time": 112,
+  },
+  Object {
+    "duration": 20160,
+    "instructions": "Pitch WLP560 - Classic Saison Ale Blend and seal the fermenter. You should see bubbles in the airlock within 24 hours.",
+    "phase": "yeast",
+    "time": 132,
+  },
+  Object {
+    "duration": 0,
+    "instructions": "Prime and bottle about 53 bottles.",
+    "phase": "bottle",
+    "time": 20292,
+  },
+  Object {
+    "duration": 20160,
+    "instructions": "Age at 20C for 14 days.",
+    "phase": "aging",
+    "time": 20292,
+  },
+  Object {
+    "duration": 0,
+    "instructions": "Relax, don't worry and have a homebrew!",
+    "phase": "drink",
+    "time": 40452,
+  },
+]
+`;
+
+exports[`computeRecipeTimeline should return the same timeline that brauhaus returns for realRecipe3 1`] = `
+Array [
+  Object {
+    "duration": 4,
+    "instructions": "Heat 2.0l to 68°C (about 4 minutes).",
+    "phase": "steep",
+    "time": 0,
+  },
+  Object {
+    "duration": 20,
+    "instructions": "Add 0.50kg of Caramel 40L (3.6 GU) and steep for 20 minutes.",
+    "phase": "steep",
+    "time": 4,
+  },
+  Object {
+    "duration": 24,
+    "instructions": "Top up the wort to 10.0l and heat to a rolling boil (about 24 minutes).",
+    "phase": "top-up",
+    "time": 24,
+  },
+  Object {
+    "duration": 60,
+    "instructions": "Add 4.00kg of Extra pale extract (57.9 GU), 28.349556839727484g of Cascade hops",
+    "phase": "boil",
+    "time": 48,
+  },
+  Object {
+    "duration": 20,
+    "instructions": "Flame out. Begin chilling to 20°C and aerate the cooled wort (about 20 minutes).",
+    "phase": "chill",
+    "time": 108,
+  },
+  Object {
+    "duration": 14400,
+    "instructions": "Pitch Wyeast 3052 and seal the fermenter. You should see bubbles in the airlock within 24 hours.",
+    "phase": "yeast",
+    "time": 128,
+  },
+  Object {
+    "duration": 7200,
+    "instructions": "Move to secondary fermenter for 5 days.",
+    "phase": "ferment",
+    "time": 14528,
+  },
+  Object {
+    "duration": 0,
+    "instructions": "Prime and bottle about 56 bottles.",
+    "phase": "bottle",
+    "time": 21728,
+  },
+  Object {
+    "duration": 20160,
+    "instructions": "Age at 20C for 14 days.",
+    "phase": "aging",
+    "time": 21728,
+  },
+  Object {
+    "duration": 0,
+    "instructions": "Relax, don't worry and have a homebrew!",
+    "phase": "drink",
+    "time": 41888,
+  },
+]
+`;
