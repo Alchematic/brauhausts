@@ -51,4 +51,4 @@ export const computeSpiceUtilizationFactor = (spice: Spice) => (spice.form === '
 
 export const computeSpicePrice = (spice: Spice) => spice.weight * 17.64; // This price stuff is garbo
 
-export const computeIsSpiceDry = (spice: Spice) => GLOBALS.DRY_SPICE_REGEX.test(spice.use);
+export const computeIsDrySpice = (spice: Spice) => GLOBALS.DRY_SPICE_REGEX.test(spice.use);

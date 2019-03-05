@@ -9,6 +9,7 @@
     ],
     "yeast": [{ "name": "Wyeast 3052", "type": "ale", "form": "liquid", "attenuation": 74 }],
     "name": "Test Recipe",
+    "type": "Extract",
     "batchSize": 20,
     "primaryDays": 10,
     "secondaryDays": 5,
@@ -53,137 +54,193 @@
     "timelineMap": null
   },
   "calculated": {
-    "name": "Test Recipe",
-    "description": "Recipe description",
-    "author": "Anonymous Brewer",
-    "boilSize": 10,
-    "batchSize": 20,
-    "servingSize": 0.355,
-    "steepEfficiency": 50,
-    "steepTime": 20,
-    "mashEfficiency": 75,
-    "style": null,
-    "ibuMethod": "tinseth",
-    "fermentables": [
-      { "name": "Extra pale extract", "weight": 4, "yield": 75, "color": 2.5, "late": false },
-      { "name": "Caramel 40L", "weight": 0.5, "yield": 75, "color": 40, "late": false }
-    ],
-    "spices": [
-      { "name": "Cascade hops", "weight": 0.028349556839727483, "aa": 4.5, "use": "boil", "time": 60, "form": "pellet" }
-    ],
-    "yeast": [{ "name": "Wyeast 3052", "type": "ale", "form": "liquid", "attenuation": 74 }],
-    "mash": null,
-    "og": 1.0614669271637978,
-    "fg": 1.0159814010625874,
-    "color": 8.445571409922096,
-    "ibu": 8.78494811270295,
     "abv": 5.950448110630616,
-    "price": 27.300086182652795,
-    "buToGu": 0.1429215436342331,
-    "bv": 0.29078645703811445,
-    "ogPlato": 15.083846640039212,
-    "fgPlato": 4.071073648471582,
     "abw": 4.626909510825387,
-    "realExtract": 6.06218300534701,
-    "calories": 201.16345092414744,
-    "bottlingTemp": 0,
-    "bottlingPressure": 0,
-    "primingCornSugar": 0.12961975028595002,
-    "primingSugar": 0.11794749177270022,
-    "primingHoney": 0.15877900931027733,
-    "primingDme": 0.17271702105852554,
-    "primaryDays": 10,
-    "primaryTemp": 20,
-    "secondaryDays": 5,
-    "secondaryTemp": 0,
-    "tertiaryDays": 0,
-    "tertiaryTemp": 0,
     "agingDays": 14,
     "agingTemp": 20,
-    "brewDayDuration": null,
-    "boilStartTime": null,
+    "author": "Anonymous Brewer",
+    "batchSize": 20,
     "boilEndTime": null,
+    "boilSize": 10,
+    "boilStartTime": null,
+    "bottlingPressure": 0,
+    "bottlingTemp": 0,
+    "brewDayDuration": null,
+    "buToGu": 0.1429215436342331,
+    "bv": 0.29078645703811445,
+    "calories": 201.16345092414744,
+    "color": 8.445571409922096,
+    "description": "Recipe description",
+    "est_abv": 0,
+    "est_color": 0,
+    "est_fg": 0,
+    "est_og": 0,
+    "fermentables": [
+      {
+        "color": 2.5,
+        "late": false,
+        "name": "Extra pale extract",
+        "weight": 4,
+        "yield": 75
+      },
+      {
+        "color": 40,
+        "late": false,
+        "name": "Caramel 40L",
+        "weight": 0.5,
+        "yield": 75
+      }
+    ],
+    "fg": 1.0159814010625874,
+    "fgPlato": 4.071073648471582,
+    "ibu": 8.78494811270295,
+    "ibuMethod": "tinseth",
+    "mash": null,
+    "mashEfficiency": 75,
+    "name": "Test Recipe",
+    "notes": "",
+    "og": 1.0614669271637978,
+    "ogPlato": 15.083846640039212,
+    "price": 27.300086182652795,
+    "primaryDays": 10,
+    "primaryTemp": 20,
+    "primingCornSugar": 0.12961975028595002,
+    "primingDme": 0.17271702105852554,
+    "primingHoney": 0.15877900931027733,
+    "primingSugar": 0.11794749177270022,
+    "realExtract": 6.06218300534701,
+    "secondaryDays": 5,
+    "secondaryTemp": 0,
+    "servingSize": 0.355,
+    "spices": [
+      {
+        "aa": 4.5,
+        "form": "pellet",
+        "name": "Cascade hops",
+        "time": 60,
+        "use": "boil",
+        "weight": 0.028349556839727483
+      }
+    ],
+    "steepEfficiency": 50,
+    "steepTime": 20,
+    "style": null,
+    "tertiaryDays": 0,
+    "tertiaryTemp": 0,
     "timelineMap": {
+      "drySpice": {},
       "fermentables": {
-        "mash": [],
-        "steep": [
-          {
-            "fermentable": { "name": "Caramel 40L", "weight": 0.5, "yield": 75, "color": 40, "late": false },
-            "gravity": 3.615701597870456
-          }
-        ],
         "boil": [
           {
-            "fermentable": { "name": "Extra pale extract", "weight": 4, "yield": 75, "color": 2.5, "late": false },
+            "fermentable": {
+              "color": 2.5,
+              "late": false,
+              "name": "Extra pale extract",
+              "weight": 4,
+              "yield": 75
+            },
             "gravity": 57.851225565927294
           }
         ],
-        "boilEnd": []
+        "boilEnd": [],
+        "mash": [],
+        "steep": [
+          {
+            "fermentable": {
+              "color": 40,
+              "late": false,
+              "name": "Caramel 40L",
+              "weight": 0.5,
+              "yield": 75
+            },
+            "gravity": 3.615701597870456
+          }
+        ]
       },
       "times": {
         "60": [
           {
+            "bitterness": 0,
             "spice": {
-              "name": "Cascade hops",
-              "weight": 0.028349556839727483,
               "aa": 4.5,
-              "use": "boil",
+              "form": "pellet",
+              "name": "Cascade hops",
               "time": 60,
-              "form": "pellet"
-            },
-            "bitterness": 0
+              "use": "boil",
+              "weight": 0.028349556839727483
+            }
           }
         ]
       },
-      "drySpice": {},
-      "yeast": [{ "name": "Wyeast 3052", "type": "ale", "form": "liquid", "attenuation": 74 }]
-    }
+      "yeast": [
+        {
+          "attenuation": 74,
+          "form": "liquid",
+          "name": "Wyeast 3052",
+          "type": "ale"
+        }
+      ]
+    },
+    "type": "Extract",
+    "yeast": [
+      {
+        "attenuation": 74,
+        "form": "liquid",
+        "name": "Wyeast 3052",
+        "type": "ale"
+      }
+    ]
   },
   "timeline": [
     {
-      "instructions": "Heat 1.4l to 68°C (about 2 minutes)",
-      "time": 0,
-      "phase": "steep"
+      "instructions": "Heat 2.0l to 68°C (about 4 minutes).",
+      "phase": "steep",
+      "time": 0
     },
     {
       "instructions": "Add 0.50kg of Caramel 40L (3.6 GU) and steep for 20 minutes.",
-      "time": 1.726725,
-      "phase": "steep"
+      "phase": "steep",
+      "time": 4
     },
     {
-      "instructions": "Top up the wort to 10.0l and heat to a rolling boil (about 19.761408333333332 minutes).",
-      "time": 21.726725000000002,
-      "phase": "top-up"
+      "instructions": "Top up the wort to 10.0l and heat to a rolling boil (about 24 minutes).",
+      "phase": "top-up",
+      "time": 24
     },
     {
       "instructions": "Add 4.00kg of Extra pale extract (57.9 GU), 28.349556839727484g of Cascade hops",
-      "time": 41.48813333333334,
-      "phase": "boil"
+      "phase": "boil",
+      "time": 48
     },
     {
       "instructions": "Flame out. Begin chilling to 20°C and aerate the cooled wort (about 20 minutes).",
-      "time": 101.48813333333334,
-      "phase": "chill"
+      "phase": "chill",
+      "time": 108
     },
     {
       "instructions": "Pitch Wyeast 3052 and seal the fermenter. You should see bubbles in the airlock within 24 hours.",
-      "time": 121.48813333333334,
-      "phase": "yeast"
+      "phase": "yeast",
+      "time": 128
     },
     {
       "instructions": "Move to secondary fermenter for 5 days.",
-      "time": 14521.488133333334,
-      "phase": "ferment"
+      "phase": "ferment",
+      "time": 14528
     },
     {
-      "instructions": "Prime and bottle about 56 bottles. Age at 20C for 14 days.",
-      "time": 21721.488133333332,
-      "phase": "bottle"
+      "instructions": "Prime and bottle about 56 bottles.",
+      "phase": "bottle",
+      "time": 21728
+    },
+    {
+      "instructions": "Age at 20C for 14 days.",
+      "phase": "aging",
+      "time": 21728
     },
     {
       "instructions": "Relax, don't worry and have a homebrew!",
-      "time": 41881.48813333333,
-      "phase": "drink"
+      "phase": "drink",
+      "time": 41888
     }
   ]
 }

@@ -1,5 +1,6 @@
 {
   "original": {
+    "type": "Extract",
     "fermentables": [{ "name": "Extra pale extract", "weight": 4, "yield": 75, "color": 2.5, "late": false }],
     "spices": [
       { "name": "Cascade hops", "weight": 0.028349556839727483, "aa": 4.5, "use": "boil", "time": 60, "form": "pellet" }
@@ -50,82 +51,123 @@
     "timelineMap": null
   },
   "calculated": {
-    "name": "Test Recipe",
-    "description": "Recipe description",
-    "author": "Anonymous Brewer",
-    "boilSize": 10,
-    "batchSize": 20,
-    "servingSize": 0.355,
-    "steepEfficiency": 50,
-    "steepTime": 20,
-    "mashEfficiency": 75,
-    "style": null,
-    "ibuMethod": "tinseth",
-    "fermentables": [{ "name": "Extra pale extract", "weight": 4, "yield": 75, "color": 2.5, "late": false }],
-    "spices": [
-      { "name": "Cascade hops", "weight": 0.028349556839727483, "aa": 4.5, "use": "boil", "time": 60, "form": "pellet" }
-    ],
-    "yeast": [{ "name": "Wyeast 3052", "type": "ale", "form": "liquid", "attenuation": 74 }],
-    "mash": null,
-    "og": 1.0578512255659274,
-    "fg": 1.0150413186471412,
-    "color": 3.9753152044771203,
-    "ibu": 9.374843319028964,
     "abv": 5.605608592259691,
-    "price": 25.100086182652795,
-    "buToGu": 0.16205090259229468,
-    "bv": 0.32970682114403704,
-    "ogPlato": 14.2395151716224,
-    "fgPlato": 3.834502393229826,
     "abw": 4.362808396595539,
-    "realExtract": 5.715728703563204,
-    "calories": 189.4172048409443,
-    "bottlingTemp": 0,
-    "bottlingPressure": 0,
-    "primingCornSugar": 0.12961975028595002,
-    "primingSugar": 0.11794749177270022,
-    "primingHoney": 0.15877900931027733,
-    "primingDme": 0.17271702105852554,
-    "primaryDays": 14,
-    "primaryTemp": 20,
-    "secondaryDays": 0,
-    "secondaryTemp": 0,
-    "tertiaryDays": 0,
-    "tertiaryTemp": 0,
     "agingDays": 14,
     "agingTemp": 20,
-    "brewDayDuration": null,
-    "boilStartTime": null,
+    "author": "Anonymous Brewer",
+    "batchSize": 20,
     "boilEndTime": null,
+    "boilSize": 10,
+    "boilStartTime": null,
+    "bottlingPressure": 0,
+    "bottlingTemp": 0,
+    "brewDayDuration": null,
+    "buToGu": 0.16205090259229468,
+    "bv": 0.32970682114403704,
+    "calories": 189.4172048409443,
+    "color": 3.9753152044771203,
+    "description": "Recipe description",
+    "est_abv": 0,
+    "est_color": 0,
+    "est_fg": 0,
+    "est_og": 0,
+    "fermentables": [
+      {
+        "color": 2.5,
+        "late": false,
+        "name": "Extra pale extract",
+        "weight": 4,
+        "yield": 75
+      }
+    ],
+    "fg": 1.0150413186471412,
+    "fgPlato": 3.834502393229826,
+    "ibu": 9.374843319028964,
+    "ibuMethod": "tinseth",
+    "mash": null,
+    "mashEfficiency": 75,
+    "name": "Test Recipe",
+    "notes": "",
+    "og": 1.0578512255659274,
+    "ogPlato": 14.2395151716224,
+    "price": 25.100086182652795,
+    "primaryDays": 14,
+    "primaryTemp": 20,
+    "primingCornSugar": 0.12961975028595002,
+    "primingDme": 0.17271702105852554,
+    "primingHoney": 0.15877900931027733,
+    "primingSugar": 0.11794749177270022,
+    "realExtract": 5.715728703563204,
+    "secondaryDays": 0,
+    "secondaryTemp": 0,
+    "servingSize": 0.355,
+    "spices": [
+      {
+        "aa": 4.5,
+        "form": "pellet",
+        "name": "Cascade hops",
+        "time": 60,
+        "use": "boil",
+        "weight": 0.028349556839727483
+      }
+    ],
+    "steepEfficiency": 50,
+    "steepTime": 20,
+    "style": null,
+    "tertiaryDays": 0,
+    "tertiaryTemp": 0,
     "timelineMap": {
+      "drySpice": {},
       "fermentables": {
-        "mash": [],
-        "steep": [],
         "boil": [
           {
-            "fermentable": { "name": "Extra pale extract", "weight": 4, "yield": 75, "color": 2.5, "late": false },
+            "fermentable": {
+              "color": 2.5,
+              "late": false,
+              "name": "Extra pale extract",
+              "weight": 4,
+              "yield": 75
+            },
             "gravity": 57.851225565927294
           }
         ],
-        "boilEnd": []
+        "boilEnd": [],
+        "mash": [],
+        "steep": []
       },
       "times": {
         "60": [
           {
+            "bitterness": 0,
             "spice": {
-              "name": "Cascade hops",
-              "weight": 0.028349556839727483,
               "aa": 4.5,
-              "use": "boil",
+              "form": "pellet",
+              "name": "Cascade hops",
               "time": 60,
-              "form": "pellet"
-            },
-            "bitterness": 0
+              "use": "boil",
+              "weight": 0.028349556839727483
+            }
           }
         ]
       },
-      "drySpice": {},
-      "yeast": [{ "name": "Wyeast 3052", "type": "ale", "form": "liquid", "attenuation": 74 }]
-    }
+      "yeast": [
+        {
+          "attenuation": 74,
+          "form": "liquid",
+          "name": "Wyeast 3052",
+          "type": "ale"
+        }
+      ]
+    },
+    "type": "Extract",
+    "yeast": [
+      {
+        "attenuation": 74,
+        "form": "liquid",
+        "name": "Wyeast 3052",
+        "type": "ale"
+      }
+    ]
   }
 }

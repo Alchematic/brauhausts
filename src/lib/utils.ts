@@ -4,16 +4,22 @@ import { parseString } from 'xml2js';
 import { GLOBALS } from './globals';
 
 /**
- * Get the approximate time to change a volume of liquid in liters by a
+ * Get the approximate time in minutes to change a volume of liquid in liters by a
  * number of degrees Celsius. Temp defaults to 80 which is about
  * the temperature difference between tap water and boiling.
  * Input energy is set via BURNER_ENERGY and is measured in
  * kilojoules per hour. It defaults to an average stovetop burner.
+ *
+ * KW = KJ / second
+ *
+ * This calculation is such a guess it's crazy, so I'm rounding up.
  */
-export const computeTimeToHeat = (volume: number, temp: number = 80, heatEnergy = GLOBALS.BURNER_ENERGY) => {
-  const kj = GLOBALS.SPECIFIC_HEAT_OF_WATER * volume * temp;
+export const computeTimeToHeat = (volume: number, temp: number = 80, burnerKW = GLOBALS.BURNER_KW) => {
+  const totalKJ = GLOBALS.SPECIFIC_HEAT_OF_WATER * volume * temp;
 
-  return (kj / heatEnergy) * 60;
+  const result = Math.ceil(totalKJ / burnerKW / 60);
+
+  return result;
 };
 
 export const computeDisplayDuration = (minutes: number, approximate?: number) => {
@@ -131,3 +137,5 @@ export const isObjectEqualWithRoundedNums = (a: any, b: any, percentDiffMax: num
       }
     },
   );
+
+export const lowerCaseIncludes = (a: string, b: string) => _.includes(_.toLower(a), _.toLower(b));

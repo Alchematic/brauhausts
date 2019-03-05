@@ -3,9 +3,12 @@ export const GLOBALS = {
   DEFAULT_SPARGE_TEMP: 76,
   MINUTES_PER_DAY: 1440,
 
-  // Energy output of the stovetop or gas burner in kilojoules per hour.Default
-  // is based on a large stovetop burner that would put out 2, 500 watts.
-  BURNER_ENERGY: 9000,
+  /**
+   * Energy output of the stovetop or gas burner in kilowatts. The default
+   * is based on a large stovetop burner that would put out 2, 500 watts.
+   * We can assume that about a fifth of that energy is lost.
+   */
+  BURNER_KW: 2,
 
   SPECIFIC_HEAT_OF_WATER: 4.186,
 
