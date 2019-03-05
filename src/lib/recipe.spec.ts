@@ -22,26 +22,26 @@ describe('createRecipe', () => {
 
 describe('calculateRecipe', () => {
   it('should return the previously calculated result that has been compared with brauhaus for realRecipe', () => {
-    const recipe = createRecipe(testRecipe1.original as Recipe);
+    const recipe = createRecipe(testRecipe1 as Recipe);
 
     const result = calculateRecipe(recipe);
 
-    expect(result).toEqual(testRecipe1.calculated);
+    expect(result).toMatchSnapshot();
   });
 
   it('should return the previously calculated result that has been compared with brauhaus for realRecipe2', () => {
-    const recipe = createRecipe(testRecipe2.original as Recipe);
+    const recipe = createRecipe(testRecipe2 as Recipe);
 
     const result = calculateRecipe(recipe);
 
-    expect(result).toEqual(testRecipe2.calculated);
+    expect(result).toMatchSnapshot();
   });
 
   it('should return the previously calculated result that has been compared with brauhaus for realRecipe3', () => {
-    const recipe = createRecipe(testRecipe3.original as Recipe);
+    const recipe = createRecipe(testRecipe3 as Recipe);
 
     const result = calculateRecipe(recipe);
 
-    expect(result).toEqual(testRecipe3.calculated);
+    expect(result).toMatchSnapshot();
   });
 });

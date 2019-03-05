@@ -28,7 +28,7 @@ type TimelineSpice = {
 };
 
 type BrewState = {
-  timeline: { time: number; instructions: string; phase: string }[];
+  timeline: { time: number; instructions: string; phase: string; duration?: number }[];
   volume: number;
   temp: number;
   time: number;
@@ -495,6 +495,12 @@ const computeDrinkPhase = (currentState: BrewState) => {
   return currentState;
 };
 
+const computeStepDurations = (timeline: BrewState['timeline']) =>
+  _.map(timeline, (step, index) => ({
+    ...step,
+    duration: _.get(timeline, `${index + 1}.time`, step.time) - step.time,
+  }));
+
 /**
  * Compute a recipe's timeline of instructions. These are done in phases:
  * Mash - Optional - The phase in which malt sugars are released by soaking grains in water
@@ -540,5 +546,7 @@ export const computeRecipeTimeline = (recipe: Readonly<Recipe>, isSiUnits = true
 
   currentState = computeDrinkPhase(currentState);
 
-  return currentState.timeline;
+  const finalizedTimeline = computeStepDurations(currentState.timeline);
+
+  return finalizedTimeline;
 };
