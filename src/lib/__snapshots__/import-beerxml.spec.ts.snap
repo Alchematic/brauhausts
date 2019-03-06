@@ -1,0 +1,149 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`importBeerXML should read the Kama Citra xml and generate a recipe timeline 1`] = `
+Array [
+  Object {
+    "duration": 0,
+    "instructions": "Begin Mash Steps mash. Add 4.08kg of Pale 2-Row (45.6 GU), 0.45kg of Caramel / Crystal 40L (3.1 GU), 2.11g of Lactic Acid (0.0 GU).",
+    "phase": "mash",
+    "time": 0,
+  },
+  Object {
+    "duration": 25,
+    "instructions": "Heat 14.2l to 73°C (about 25 minutes)",
+    "phase": "mash",
+    "time": 0,
+  },
+  Object {
+    "duration": 60,
+    "instructions": "Strike temp=163.6F: Infuse 14.2l for 60 minutes at 66.666666666667C.",
+    "phase": "mash",
+    "time": 25,
+  },
+  Object {
+    "duration": 5,
+    "instructions": "Remove grains from mash. This is now your wort.",
+    "phase": "mash",
+    "time": 85,
+  },
+  Object {
+    "duration": 50,
+    "instructions": "Top up the wort to 25.6l and heat to a rolling boil (about 50 minutes).",
+    "phase": "top-up",
+    "time": 90,
+  },
+  Object {
+    "duration": 40,
+    "instructions": "Add 21.262142325g of Centennial",
+    "phase": "boil",
+    "time": 140,
+  },
+  Object {
+    "duration": 10,
+    "instructions": "Add 28.3495231g of Cascade",
+    "phase": "boil",
+    "time": 180,
+  },
+  Object {
+    "duration": 10,
+    "instructions": "Add 28.3495231g of Cascade, 1000g of Whirlfloc, 2.46446g of Fermax",
+    "phase": "boil",
+    "time": 190,
+  },
+  Object {
+    "duration": 0,
+    "instructions": "Add 56.6990462g of Citra, 7.087380775g of Centennial",
+    "phase": "boil",
+    "time": 200,
+  },
+  Object {
+    "duration": 20,
+    "instructions": "Flame out. Begin chilling to 18.333333333333°C and aerate the cooled wort (about 20 minutes).",
+    "phase": "chill",
+    "time": 200,
+  },
+  Object {
+    "duration": 12960,
+    "instructions": "Pitch San Diego Super Yeast WLP090 and seal the fermenter. You should see bubbles in the airlock within 24 hours.",
+    "phase": "yeast",
+    "time": 220,
+  },
+  Object {
+    "duration": 7200,
+    "instructions": "Dry Hop 28.3495231g of Citra, 28.3495231g of Cascade",
+    "phase": "dry hop",
+    "time": 13180,
+  },
+  Object {
+    "duration": 0,
+    "instructions": "Prime and bottle about 58 bottles.",
+    "phase": "bottle",
+    "time": 20380,
+  },
+  Object {
+    "duration": 20160,
+    "instructions": "Age at 20C for 14 days.",
+    "phase": "aging",
+    "time": 20380,
+  },
+  Object {
+    "duration": 0,
+    "instructions": "Relax, don't worry and have a homebrew!",
+    "phase": "drink",
+    "time": 40540,
+  },
+]
+`;
+
+exports[`importBeerXML should read the caribou slobber xml and generate a recipe timeline 1`] = `
+Array [
+  Object {
+    "duration": 2,
+    "instructions": "Heat 1.1l to 68°C (about 2 minutes). You may want to use a small, clean, and sanitized pot for steeping.",
+    "phase": "steep",
+    "time": 0,
+  },
+  Object {
+    "duration": 20,
+    "instructions": "Add 0.11kg of Caramel / Crystal 80L (0.8 GU), 0.11kg of Pale Chocolate (0.8 GU), 0.06kg of Black Malt (0.4 GU) and steep for 20 minutes.",
+    "phase": "steep",
+    "time": 2,
+  },
+  Object {
+    "duration": 24,
+    "instructions": "Top up the wort to 9.5l and heat to a rolling boil (about 24 minutes).",
+    "phase": "top-up",
+    "time": 22,
+  },
+  Object {
+    "duration": 20,
+    "instructions": "Flame out. Begin chilling to 20°C and aerate the cooled wort (about 20 minutes).",
+    "phase": "chill",
+    "time": 46,
+  },
+  Object {
+    "duration": 20160,
+    "instructions": "Pitch Windsor Ale Yeast and seal the fermenter. You should see bubbles in the airlock within 24 hours.",
+    "phase": "yeast",
+    "time": 66,
+  },
+  Object {
+    "duration": 0,
+    "instructions": "Prime and bottle about 53 bottles.",
+    "phase": "bottle",
+    "time": 20226,
+  },
+  Object {
+    "duration": 20160,
+    "instructions": "Age at 20C for 14 days.",
+    "phase": "aging",
+    "time": 20226,
+  },
+  Object {
+    "duration": 0,
+    "instructions": "Relax, don't worry and have a homebrew!",
+    "phase": "drink",
+    "time": 40386,
+  },
+]
+`;
