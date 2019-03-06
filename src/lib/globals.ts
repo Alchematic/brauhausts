@@ -1,5 +1,10 @@
+import convert from 'convert-units';
+
 export const GLOBALS = {
   ROOM_TEMP: 23, // Room temp in C
+  REFRIGERATOR_TEMP: convert(40)
+    .from('F')
+    .to('C'),
   DEFAULT_SPARGE_TEMP: 76,
   MINUTES_PER_DAY: 1440,
 

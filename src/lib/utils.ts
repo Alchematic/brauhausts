@@ -68,6 +68,17 @@ export const computeDisplayDuration = (minutes: number, approximate?: number) =>
 
 export const yieldToPpg = (yieldPercentage: number) => yieldPercentage * 0.46214;
 
+export const computeTempString = (temp: number, isSiUnits: boolean) =>
+  isSiUnits
+    ? `${temp.toFixed(1)}°C`
+    : `${convert(temp)
+        .from('C')
+        .to('F')
+        .toFixed(0)}°F`;
+
+export const convertSpecificGravityToPlato = (sg: number) =>
+  -616.868 + 1111.14 * sg - 630.272 * sg * sg + 135.997 * sg * sg * sg;
+
 export const convertLPerKgToQtPerLb = (lPerKg: number) => {
   const qtPerKg = convert(lPerKg)
     .from('l')
