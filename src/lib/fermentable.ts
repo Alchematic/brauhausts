@@ -3,6 +3,14 @@ import { GLOBALS } from './globals';
 import { RecipeType } from './recipe';
 import { yieldToPpg } from './utils';
 
+export enum FermentableType {
+  GRAIN = 'Grain',
+  SUGAR = 'Sugar',
+  LIQUID_EXTRACT = 'Extract',
+  DRY_EXTRACT = 'Dry Extract',
+  ADJUNCT = 'Adjunct',
+}
+
 export type Fermentable = {
   name: string;
   type: 'Grain' | 'Sugar' | 'Extract' | 'Dry Extract' | 'Adjunct';
@@ -36,7 +44,7 @@ export const computeFermentablePrice = (fermentable: Fermentable) => {
   return fermentable.weight * pricePerKg;
 };
 
-export enum FermentableType {
+export enum FermentableUse {
   MASH = 'mash',
   STEEP = 'steep',
   BOIL = 'boil',
@@ -44,35 +52,35 @@ export enum FermentableType {
 }
 
 /**
- * Computes the fermentable type based on the name. Then checks the recipe type to determine if it should be switched.
+ * Computes the fermentable use based on the name. Then checks the recipe type to determine if it should be switched.
  * Fermentables switching rules are:
  *   - A mash fermentable found in an extract recipe should become a boil fermentable.
  *   - A steep fermentable found in a partial mash or all grain recipe should become a mash fermentable.
  */
-export const computeFermentableType = (fermentable: Fermentable, recipeType?: RecipeType) => {
-  const fermentableType = /mash/i.test(fermentable.name)
-    ? FermentableType.MASH
+export const computeFermentableUse = (fermentable: Fermentable, recipeType?: RecipeType) => {
+  const fermentableUse = /mash/i.test(fermentable.name)
+    ? FermentableUse.MASH
     : /steep/i.test(fermentable.name)
-    ? FermentableType.STEEP
+    ? FermentableUse.STEEP
     : /boil/i.test(fermentable.name)
-    ? FermentableType.BOIL
+    ? FermentableUse.BOIL
     : GLOBALS.FERMENTABLE_BOIL_REGEX.test(fermentable.name)
-    ? FermentableType.BOIL
+    ? FermentableUse.BOIL
     : GLOBALS.FERMENTABLE_STEEP_REGEX.test(fermentable.name)
-    ? FermentableType.STEEP
-    : FermentableType.MASH;
+    ? FermentableUse.STEEP
+    : FermentableUse.MASH;
 
-  const isMashInExtractRecipe = recipeType === RecipeType.EXTRACT && fermentableType === FermentableType.MASH;
-  if (isMashInExtractRecipe || fermentableType === FermentableType.BOIL) {
-    return fermentable.late ? FermentableType.BOIL_END : FermentableType.BOIL;
+  const isMashInExtractRecipe = recipeType === RecipeType.EXTRACT && fermentableUse === FermentableUse.MASH;
+  if (isMashInExtractRecipe || fermentableUse === FermentableUse.BOIL) {
+    return fermentable.late ? FermentableUse.BOIL_END : FermentableUse.BOIL;
   }
 
   const isSteepInMashRecipe =
     (recipeType === RecipeType.PARTIAL_MASH || recipeType === RecipeType.ALL_GRAIN) &&
-    fermentableType === FermentableType.STEEP;
+    fermentableUse === FermentableUse.STEEP;
   if (isSteepInMashRecipe) {
-    return FermentableType.MASH;
+    return FermentableUse.MASH;
   }
 
-  return fermentableType;
+  return fermentableUse;
 };

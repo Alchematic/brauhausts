@@ -1,10 +1,11 @@
 import * as _ from 'lodash';
-import { createDefaultFermentable } from './fermentable';
+import { createDefaultFermentable, Fermentable } from './fermentable';
 import { createDefaultMash, createDefaultMashStep } from './mash';
-import { computeRecipeGrainWeight, createRecipe, Recipe, RecipeTypeMap } from './recipe';
-import { createDefaultSpice } from './spice';
-import { parseXML } from './utils';
-import { createDefaultYeast } from './yeast';
+import { computeGrainWeight, createRecipe, Recipe, RecipeTypeMap } from './recipe';
+import { createDefaultSpice, Spice } from './spice';
+import { Style } from './style';
+import { lowerKeysDeep, parseXML, pickAndParseFloat } from './utils';
+import { createDefaultYeast, Yeast } from './yeast';
 
 /**
  * In beerXML a fermentable may be stored as recipe.fermentable or as recipe.fermentables.fermentable.
@@ -17,287 +18,142 @@ const findPluralOrSingularAsArray = (recipe: any, pluralForm: string, singularFo
   return _.isObject(result) && !_.isArray(result) ? [result] : _.toArray(result);
 };
 
+const computeImportFermentables = (xmlFermentables: any[]): Fermentable[] =>
+  _.map(xmlFermentables, fermentable => {
+    const newFermentable = _.defaults(
+      {
+        name: fermentable.name,
+        weight: parseFloat(fermentable.amount) || undefined,
+        yield: parseFloat(fermentable.yield) || undefined,
+        color: parseFloat(fermentable.color) || undefined,
+        late: fermentable.add_after_boil === 'true',
+        type: fermentable.type,
+      },
+      createDefaultFermentable(),
+    );
+
+    return newFermentable;
+  });
+
+const computeImportStyle = (xmlRecipe: any): Style => ({
+  ..._.pick(xmlRecipe.style, 'name', 'category'),
+  og: [parseFloat(xmlRecipe.style.og_min) || undefined, parseFloat(xmlRecipe.style.og_max) || undefined],
+  fg: [parseFloat(xmlRecipe.style.fg_min) || undefined, parseFloat(xmlRecipe.style.fg_max) || undefined],
+  ibu: [parseFloat(xmlRecipe.style.ibu_min) || undefined, parseFloat(xmlRecipe.style.ibu_max) || undefined],
+  color: [parseFloat(xmlRecipe.style.color_min) || undefined, parseFloat(xmlRecipe.style.color_max) || undefined],
+  abv: [parseFloat(xmlRecipe.style.abv_min) || undefined, parseFloat(xmlRecipe.style.abv_max) || undefined],
+  carb: [parseFloat(xmlRecipe.style.carb_min) || undefined, parseFloat(xmlRecipe.style.carb_max) || undefined],
+});
+
+const computeImportSpices = (xmlSpices: any[]): Spice[] =>
+  _.map(xmlSpices, spice => {
+    const newSpice = _.defaults(
+      {
+        ..._.pick(spice, 'name', 'use', 'form', 'time'),
+        weight: parseFloat(spice.amount) || undefined,
+        aa: parseFloat(spice.alpha) || undefined,
+      },
+      createDefaultSpice(),
+    );
+
+    return newSpice;
+  });
+
+const computeImportYeast = (xmlYeasts: any[]): Yeast[] =>
+  _.map(xmlYeasts, yeast => {
+    const newYeast = _.defaults(
+      {
+        ..._.pick(yeast, 'name', 'type', 'form'),
+        attenuation: parseFloat(yeast.attenuation) || undefined,
+      },
+      createDefaultYeast(),
+    );
+
+    return newYeast;
+  });
+
+const computeImportMashSteps = (xmlMashSteps: any[], recipeGrainWeight: number) =>
+  _.map(xmlMashSteps, mashStep => {
+    if (_.isEmpty(mashStep)) {
+      return null;
+    }
+    const newMashStep = _.defaults(
+      {
+        ..._.pick(mashStep, 'name', 'type'),
+        waterRatio: parseFloat(mashStep.infuse_amount)
+          ? parseFloat(mashStep.infuse_amount) / recipeGrainWeight
+          : undefined,
+        temp: parseFloat(mashStep.step_temp) || undefined,
+        endTemp: parseFloat(mashStep.end_temp) || undefined,
+        time: parseFloat(mashStep.step_time) || undefined,
+      },
+      {
+        waterRatio: parseFloat(mashStep.decoction_amt)
+          ? parseFloat(mashStep.decoction_amt) / recipeGrainWeight
+          : undefined,
+      },
+      createDefaultMashStep(),
+    );
+
+    return newMashStep;
+  });
+
+const computeImportMash = (xmlMash: any, xmlMashSteps: any[], recipeGrainWeight: number) =>
+  _.defaults(
+    {
+      ..._.pick(xmlMash, 'name', 'notes'),
+      grainTemp: parseFloat(xmlMash.grain_temp) || undefined,
+      spargeTemp: parseFloat(xmlMash.sparge_temp) || undefined,
+      ph: parseFloat(xmlMash.ph) || undefined,
+      steps: computeImportMashSteps(xmlMashSteps, recipeGrainWeight),
+    },
+    createDefaultMash(),
+  );
+
 export const importBeerXML = async (xml: string) => {
   const beerXmlObject = await parseXML(xml);
 
   const recipes = findPluralOrSingularAsArray(beerXmlObject, 'RECIPES', 'RECIPE');
 
   return _.map(recipes, (xmlRecipe: any) => {
-    const hops = findPluralOrSingularAsArray(xmlRecipe, 'HOPS', 'HOP');
-    const fermentables = findPluralOrSingularAsArray(xmlRecipe, 'FERMENTABLES', 'FERMENTABLE');
-    const yeasts = findPluralOrSingularAsArray(xmlRecipe, 'YEASTS', 'YEAST');
-    const miscs = findPluralOrSingularAsArray(xmlRecipe, 'MISCS', 'MISC');
-    // There are some weird cases here. Mashs and Styles seem to never actually be used, even though they exist
-    // in the beerxml docs. They are almost always listed as a singular mash or style. For now we can't handle multiple
-    const styles = findPluralOrSingularAsArray(xmlRecipe, 'STYLES', 'STYLE');
-    const mashs = findPluralOrSingularAsArray(xmlRecipe, 'MASHS', 'MASH');
-    const mashSteps = _.map(_.map(mashs, 'MASH_STEPS'), step => step.MASH_STEP);
-    // const equipments = findPluralOrSingularAsArray(xmlRecipe, 'EQUIPMENTS', 'EQUIPMENT');
+    xmlRecipe = lowerKeysDeep(xmlRecipe);
+    const xmlHops = findPluralOrSingularAsArray(xmlRecipe, 'hops', 'hop');
+    const xmlFermentables = findPluralOrSingularAsArray(xmlRecipe, 'fermentables', 'fermentable');
+    const xmlYeasts = findPluralOrSingularAsArray(xmlRecipe, 'yeasts', 'yeast');
+    const xmlMiscs = findPluralOrSingularAsArray(xmlRecipe, 'miscs', 'misc');
+    const xmlMashSteps = _.map(
+      findPluralOrSingularAsArray(xmlRecipe, 'mash.mash_steps', 'mash.mash_steps'),
+      'mash_step',
+    );
 
-    const overrideRecipe: Partial<Recipe> = {};
+    const fermentables = computeImportFermentables(xmlFermentables);
 
-    _.map(xmlRecipe, (value, key) => {
-      switch (key.toLowerCase()) {
-        case 'name':
-          overrideRecipe.name = value;
-          break;
-        case 'brewer':
-          overrideRecipe.author = value;
-          break;
-        case 'type':
-          overrideRecipe.type = RecipeTypeMap[value as keyof typeof RecipeTypeMap];
-          break;
-        case 'notes':
-          overrideRecipe.notes = value;
-          break;
-        case 'batch_size':
-          overrideRecipe.batchSize = parseFloat(value);
-          break;
-        case 'boil_size':
-          overrideRecipe.boilSize = parseFloat(value);
-          break;
-        case 'efficiency':
-          overrideRecipe.mashEfficiency = parseFloat(value);
-          break;
-        case 'primary_age':
-          overrideRecipe.primaryDays = parseFloat(value);
-          break;
-        case 'primary_temp':
-          overrideRecipe.primaryTemp = parseFloat(value);
-          break;
-        case 'secondary_age':
-          overrideRecipe.secondaryDays = parseFloat(value);
-          break;
-        case 'secondary_temp':
-          overrideRecipe.secondaryTemp = parseFloat(value);
-          break;
-        case 'tertiary_age':
-          overrideRecipe.tertiaryDays = parseFloat(value);
-          break;
-        case 'tertiary_temp':
-          overrideRecipe.tertiaryTemp = parseFloat(value);
-          break;
-        case 'carbonation':
-          overrideRecipe.bottlingPressure = parseFloat(value);
-          break;
-        case 'carbonation_temp':
-          overrideRecipe.bottlingTemp = parseFloat(value);
-          break;
-        case 'age':
-          overrideRecipe.agingDays = parseFloat(value);
-          break;
-        case 'age_temp':
-          overrideRecipe.agingTemp = parseFloat(value);
-          break;
-        case 'ibu':
-          overrideRecipe.ibu = parseFloat(value);
-          break;
-        case 'og':
-          overrideRecipe.og = parseFloat(value);
-          break;
-        case 'est_og':
-          overrideRecipe.est_og = parseFloat(value);
-          break;
-        case 'fg':
-          overrideRecipe.fg = parseFloat(value);
-          break;
-        case 'est_fg':
-          overrideRecipe.est_fg = parseFloat(value);
-          break;
-        case 'color':
-          overrideRecipe.color = parseFloat(value);
-          break;
-        case 'est_color':
-          overrideRecipe.est_color = parseFloat(value);
-          break;
-        case 'abv':
-          overrideRecipe.abv = parseFloat(value);
-          break;
-        case 'est_abv':
-          overrideRecipe.est_abv = parseFloat(value);
-          break;
-      }
-    });
+    const recipeGrainWeight = computeGrainWeight(fermentables);
 
-    overrideRecipe.style = {
-      name: '',
-      category: '',
-      og: [1.0, 1.15],
-      fg: [1.0, 1.15],
-      ibu: [0, 150],
-      color: [0, 500],
-      abv: [0, 14],
-      carb: [1.0, 4.0],
+    const overrideRecipe: Partial<Recipe> = {
+      ..._.pick(xmlRecipe, 'name', 'notes'),
+      ...pickAndParseFloat(xmlRecipe, 'ibu', 'og', 'est_og', 'fg', 'est_fg', 'color', 'est_color', 'abv', 'est_abv'),
+      author: xmlRecipe.brewer,
+      type: RecipeTypeMap[xmlRecipe.type as keyof typeof RecipeTypeMap],
+      batchSize: parseFloat(xmlRecipe.batch_size) || undefined,
+      boilSize: parseFloat(xmlRecipe.boil_size) || undefined,
+      mashEfficiency: parseFloat(xmlRecipe.efficiency) || undefined,
+      primaryDays: parseFloat(xmlRecipe.primary_age) || undefined,
+      primaryTemp: parseFloat(xmlRecipe.primary_temp) || undefined,
+      secondaryDays: parseFloat(xmlRecipe.secondary_age) || undefined,
+      secondaryTemp: parseFloat(xmlRecipe.secondary_temp) || undefined,
+      tertiaryDays: parseFloat(xmlRecipe.tertiary_age) || undefined,
+      tertiaryTemp: parseFloat(xmlRecipe.tertiary_temp) || undefined,
+      bottlingPressure: parseFloat(xmlRecipe.carbonation) || undefined,
+      bottlingTemp: parseFloat(xmlRecipe.carbonation_temp) || undefined,
+      agingDays: parseFloat(xmlRecipe.age) || undefined,
+      agingTemp: parseFloat(xmlRecipe.age_temp) || undefined,
+      fermentables,
+      style: computeImportStyle(xmlRecipe),
+      spices: computeImportSpices(_.concat(xmlHops, xmlMiscs)),
+      yeast: computeImportYeast(xmlYeasts),
+      mash: computeImportMash(xmlRecipe.mash, xmlMashSteps, recipeGrainWeight),
     };
-    if (_.size(styles) > 1) {
-      console.warn(`We currently do not support having more than one style in a recipe. The recipe acts as if
-        only the first style exists.`);
-    }
-    _.each(_.first(styles), (styleValue, styleKey) => {
-      switch (styleKey.toLowerCase()) {
-        case 'name':
-          overrideRecipe.style.name = styleValue;
-          break;
-        case 'category':
-          overrideRecipe.style.category = styleValue;
-          break;
-        case 'og_min':
-          overrideRecipe.style.og[0] = parseFloat(styleValue);
-          break;
-        case 'og_max':
-          overrideRecipe.style.og[1] = parseFloat(styleValue);
-          break;
-        case 'fg_min':
-          overrideRecipe.style.fg[0] = parseFloat(styleValue);
-          break;
-        case 'fg_max':
-          overrideRecipe.style.fg[1] = parseFloat(styleValue);
-          break;
-        case 'ibu_min':
-          overrideRecipe.style.ibu[0] = parseFloat(styleValue);
-          break;
-        case 'ibu_max':
-          overrideRecipe.style.ibu[1] = parseFloat(styleValue);
-          break;
-        case 'color_min':
-          overrideRecipe.style.color[0] = parseFloat(styleValue);
-          break;
-        case 'color_max':
-          overrideRecipe.style.color[1] = parseFloat(styleValue);
-          break;
-        case 'abv_min':
-          overrideRecipe.style.abv[0] = parseFloat(styleValue);
-          break;
-        case 'abv_max':
-          overrideRecipe.style.abv[1] = parseFloat(styleValue);
-          break;
-        case 'carb_min':
-          overrideRecipe.style.carb[0] = parseFloat(styleValue);
-          break;
-        case 'carb_max':
-          overrideRecipe.style.carb[1] = parseFloat(styleValue);
-          break;
-      }
-    });
-    overrideRecipe.fermentables = _.map(fermentables, fermentable => {
-      const newFermentable = createDefaultFermentable();
-      _.each(fermentable, (fermentableValue, fermentableKey) => {
-        switch (fermentableKey.toLowerCase()) {
-          case 'name':
-            newFermentable.name = fermentableValue;
-            break;
-          case 'amount':
-            newFermentable.weight = parseFloat(fermentableValue);
-            break;
-          case 'yield':
-            newFermentable.yield = parseFloat(fermentableValue);
-            break;
-          case 'color':
-            newFermentable.color = parseFloat(fermentableValue);
-            break;
-          case 'add_after_boil':
-            newFermentable.late = fermentableValue.toLowerCase() === 'true';
-            break;
-        }
-      });
-
-      return newFermentable;
-    });
-
-    overrideRecipe.spices = _.map(_.concat(hops, miscs), spice => {
-      const newSpice = _.defaults(
-        {
-          name: spice.NAME,
-          weight: parseFloat(spice.AMOUNT) || undefined,
-          aa: parseFloat(spice.ALPHA) || undefined,
-          use: spice.USE,
-          form: spice.FORM,
-          time: spice.TIME,
-        },
-        createDefaultSpice(),
-      );
-
-      return newSpice;
-    });
-
-    overrideRecipe.yeast = _.map(yeasts, yeast => {
-      const newYeast = createDefaultYeast();
-      _.each(yeast, (yeastValue, yeastKey) => {
-        switch (yeastKey.toLowerCase()) {
-          case 'name':
-            newYeast.name = yeastValue;
-            break;
-          case 'type':
-            newYeast.type = yeastValue;
-            break;
-          case 'form':
-            newYeast.form = yeastValue;
-            break;
-          case 'attenuation':
-            newYeast.attenuation = parseFloat(yeastValue);
-            break;
-        }
-      });
-
-      return newYeast;
-    });
-
-    if (_.size(mashs) > 1) {
-      console.warn(`We currently do not support having more than one mash in a recipe. The recipe acts as if
-        only the first mash exists.`);
-    }
-    overrideRecipe.mash = createDefaultMash();
-    _.each(_.first(mashs), (mashValue, mashKey) => {
-      switch (mashKey.toLowerCase()) {
-        case 'name':
-          overrideRecipe.mash.name = mashValue;
-          break;
-        case 'grain_temp':
-          overrideRecipe.mash.grainTemp = parseFloat(mashValue);
-          break;
-        case 'sparge_temp':
-          overrideRecipe.mash.spargeTemp = parseFloat(mashValue);
-          break;
-        case 'ph':
-          overrideRecipe.mash.ph = parseFloat(mashValue);
-          break;
-        case 'notes':
-          overrideRecipe.mash.notes = mashValue;
-          break;
-      }
-    });
-    // Must calculate mash steps after fermentables due to the use of fermentables to compute grain weight
-    const newMashSteps = _.map(mashSteps, mashStep => {
-      const newMashStep = createDefaultMashStep();
-      _.each(mashStep, (mashStepValue, mashStepKey) => {
-        switch (mashStepKey.toLowerCase()) {
-          case 'name':
-            newMashStep.name = mashStepValue;
-            break;
-          case 'type':
-            newMashStep.type = mashStepValue;
-            break;
-          case 'infuse_amount':
-            newMashStep.waterRatio = parseFloat(mashStepValue) / computeRecipeGrainWeight(overrideRecipe as Recipe);
-            break;
-          case 'step_temp':
-            newMashStep.temp = parseFloat(mashStepValue);
-            break;
-          case 'end_temp':
-            newMashStep.endTemp = parseFloat(mashStepValue);
-            break;
-          case 'step_time':
-            newMashStep.time = parseFloat(mashStepValue);
-            break;
-          case 'decoction_amt':
-            newMashStep.waterRatio = parseFloat(mashStepValue) / computeRecipeGrainWeight(overrideRecipe as Recipe);
-            break;
-        }
-      });
-
-      return newMashStep;
-    });
-    _.set(overrideRecipe, 'mash.steps', newMashSteps);
 
     return createRecipe(overrideRecipe);
   });

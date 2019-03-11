@@ -237,6 +237,7 @@ Object {
       1,
       4,
     ],
+    "category": "",
     "color": Array [
       0,
       500,
@@ -249,6 +250,7 @@ Object {
       0,
       150,
     ],
+    "name": "",
     "og": Array [
       1,
       1.15,

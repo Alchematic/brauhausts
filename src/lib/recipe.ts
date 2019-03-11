@@ -1,6 +1,6 @@
 import convert from 'convert-units';
 import * as _ from 'lodash';
-import { computeFermentableGU, computeFermentablePrice, computeFermentableType, Fermentable } from './fermentable';
+import { computeFermentableGU, computeFermentablePrice, computeFermentableUse, Fermentable } from './fermentable';
 import { GLOBALS } from './globals';
 import { Mash } from './mash';
 import { TimelineMap } from './recipe-timeline';
@@ -110,7 +110,16 @@ export const createRecipe = (overrideRecipe?: Partial<Recipe>): Recipe => {
     steepEfficiency: 50,
     steepTime: 20,
     mashEfficiency: 75,
-    style: null,
+    style: {
+      name: '',
+      category: '',
+      og: [1.0, 1.15],
+      fg: [1.0, 1.15],
+      ibu: [0, 150],
+      color: [0, 500],
+      abv: [0, 14],
+      carb: [1.0, 4.0],
+    },
     ibuMethod: 'tinseth',
     fermentables: [],
     spices: [],
@@ -151,48 +160,8 @@ export const createRecipe = (overrideRecipe?: Partial<Recipe>): Recipe => {
     agingTemp: 20.0,
   };
 
-  return _.assign(newRecipe, overrideRecipe);
+  return _.defaultsDeep(overrideRecipe, newRecipe);
 };
-
-/**
- * Export a recipe to JSON, which stores all values which are not
- * easily computed via Recipe.prototype.calculate(). This method
- * gets called when using JSON.stringify(recipe).
- */
-export const recipeToJson = (recipe: Recipe) =>
-  JSON.stringify(
-    _.pick(recipe, [
-      'id',
-      'name',
-      'description',
-      'type',
-      'author',
-      'boilSize',
-      'batchSize',
-      'servingSize',
-      'steepEfficiency',
-      'steepTime',
-      'mashEfficiency',
-      'style',
-      'ibuMethod',
-      'fermentables',
-      'spices',
-      'yeast',
-      'mash',
-      'bottlingTemp',
-      'bottlingPressure',
-      'primaryDays',
-      'primaryTemp',
-      'secondaryDays',
-      'secondaryTemp',
-      'tertiaryDays',
-      'tertiaryTemp',
-      'agingDays',
-      'agingTemp',
-    ]),
-    null,
-    2,
-  );
 
 export const addToRecipe = (recipe: Recipe, type: 'fermentable' | 'spice' | 'hop' | 'yeast', values: any) => {
   const newRecipe = _.cloneDeep(recipe);
@@ -212,8 +181,8 @@ export const addToRecipe = (recipe: Recipe, type: 'fermentable' | 'spice' | 'hop
   return newRecipe;
 };
 
-export const computeRecipeGrainWeight = (recipe: Recipe) => {
-  const grainFermentables = _.filter(recipe.fermentables, fermentable => lowerCaseIncludes(fermentable.type, 'grain'));
+export const computeGrainWeight = (fermentables: Fermentable[]) => {
+  const grainFermentables = _.filter(fermentables, fermentable => lowerCaseIncludes(fermentable.type, 'grain'));
 
   return _.sumBy(grainFermentables, 'weight') || 0;
 };
@@ -253,9 +222,9 @@ export const calculateRecipe = (oldRecipe: Recipe) => {
   // Calculate gravities and color from fermentables
   _.each(recipe.fermentables, fermentable => {
     let efficiency = 1.0;
-    if (computeFermentableType(fermentable) === 'steep') {
+    if (computeFermentableUse(fermentable) === 'steep') {
       efficiency = recipe.steepEfficiency / 100.0;
-    } else if (computeFermentableType(fermentable) === 'mash') {
+    } else if (computeFermentableUse(fermentable) === 'mash') {
       efficiency = recipe.mashEfficiency / 100.0;
     }
 
@@ -281,13 +250,13 @@ export const calculateRecipe = (oldRecipe: Recipe) => {
     recipe.price += computeFermentablePrice(fermentable);
 
     // Add fermentable info into the timeline map
-    const fermentableType = computeFermentableType(fermentable, recipe.type);
+    const fermentableUse = computeFermentableUse(fermentable, recipe.type);
     const timelineMapFermentable = {
       fermentable,
       gravity: gu,
     };
-    recipe.timelineMap.fermentables[fermentableType] = _.concat(
-      recipe.timelineMap.fermentables[fermentableType],
+    recipe.timelineMap.fermentables[fermentableUse] = _.concat(
+      recipe.timelineMap.fermentables[fermentableUse],
       timelineMapFermentable,
     );
   });
