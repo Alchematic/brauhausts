@@ -81,7 +81,7 @@ Object {
   "notes": "",
   "og": 1.0490293393057184,
   "ogPlato": 12.157042445478055,
-  "price": 22.214087203952005,
+  "price": 22.214087203952,
   "primaryDays": 14,
   "primaryTemp": 20,
   "primingCornSugar": 0.12961975028595002,
@@ -600,7 +600,7 @@ Object {
   "notes": "",
   "og": 1.0487228299510394,
   "ogPlato": 12.084144347463138,
-  "price": 48.373396866788006,
+  "price": 48.373396866788,
   "primaryDays": 14,
   "primaryTemp": 18.333333333333,
   "primingCornSugar": 0.12961975028595002,
@@ -850,7 +850,7 @@ Object {
       ],
       "10": Array [
         Object {
-          "bitterness": 0,
+          "bitterness": 8.120049649645363,
           "spice": Object {
             "aa": 6.5,
             "form": "Pellet",
@@ -885,7 +885,7 @@ Object {
       ],
       "20": Array [
         Object {
-          "bitterness": 0,
+          "bitterness": 13.56308170460732,
           "spice": Object {
             "aa": 6.5,
             "form": "Pellet",
@@ -898,7 +898,7 @@ Object {
       ],
       "60": Array [
         Object {
-          "bitterness": 0,
+          "bitterness": 23.25707943917503,
           "spice": Object {
             "aa": 9,
             "form": "Pellet",
@@ -965,19 +965,19 @@ Array [
   },
   Object {
     "duration": 40,
-    "instructions": "Add 21g of Centennial",
+    "instructions": "Add 21g of Centennial (23.3 IBU)",
     "phase": "boil",
     "time": 140,
   },
   Object {
     "duration": 10,
-    "instructions": "Add 28g of Cascade",
+    "instructions": "Add 28g of Cascade (13.6 IBU)",
     "phase": "boil",
     "time": 180,
   },
   Object {
     "duration": 10,
-    "instructions": "Add 28g of Cascade, 1000g of Whirlfloc, 2g of Fermax",
+    "instructions": "Add 28g of Cascade (8.1 IBU), 1000g of Whirlfloc, 2g of Fermax",
     "phase": "boil",
     "time": 190,
   },
@@ -1060,19 +1060,19 @@ Array [
   },
   Object {
     "duration": 40,
-    "instructions": "Add 21g of Centennial",
+    "instructions": "Add 21g of Centennial (23.3 IBU)",
     "phase": "boil",
     "time": 140,
   },
   Object {
     "duration": 10,
-    "instructions": "Add 28g of Cascade",
+    "instructions": "Add 28g of Cascade (13.6 IBU)",
     "phase": "boil",
     "time": 180,
   },
   Object {
     "duration": 10,
-    "instructions": "Add 28g of Cascade, 1000g of Whirlfloc, 2g of Fermax",
+    "instructions": "Add 28g of Cascade (8.1 IBU), 1000g of Whirlfloc, 2g of Fermax",
     "phase": "boil",
     "time": 190,
   },
@@ -1155,19 +1155,19 @@ Array [
   },
   Object {
     "duration": 40,
-    "instructions": "Add 21g of Centennial",
+    "instructions": "Add 21g of Centennial (23.3 IBU)",
     "phase": "boil",
     "time": 140,
   },
   Object {
     "duration": 10,
-    "instructions": "Add 28g of Cascade",
+    "instructions": "Add 28g of Cascade (13.6 IBU)",
     "phase": "boil",
     "time": 180,
   },
   Object {
     "duration": 10,
-    "instructions": "Add 28g of Cascade, 1000g of Whirlfloc, 2g of Fermax",
+    "instructions": "Add 28g of Cascade (8.1 IBU), 1000g of Whirlfloc, 2g of Fermax",
     "phase": "boil",
     "time": 190,
   },
@@ -1292,19 +1292,19 @@ Array [
   },
   Object {
     "duration": 40,
-    "instructions": "Add 21g of Centennial",
+    "instructions": "Add 21g of Centennial (23.3 IBU)",
     "phase": "boil",
     "time": 140,
   },
   Object {
     "duration": 10,
-    "instructions": "Add 28g of Cascade",
+    "instructions": "Add 28g of Cascade (13.6 IBU)",
     "phase": "boil",
     "time": 180,
   },
   Object {
     "duration": 10,
-    "instructions": "Add 28g of Cascade, 1000g of Whirlfloc, 2g of Fermax",
+    "instructions": "Add 28g of Cascade (8.1 IBU), 1000g of Whirlfloc, 2g of Fermax",
     "phase": "boil",
     "time": 190,
   },

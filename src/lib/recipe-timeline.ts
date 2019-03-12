@@ -17,7 +17,7 @@ export type TimelineMap = {
 
 type TimelineFermentables = { [key in FermentableUse]: TimelineFermentable[] };
 
-type TimelineFermentable = {
+export type TimelineFermentable = {
   fermentable: Fermentable;
   gravity: number;
 };
@@ -330,7 +330,7 @@ const computeBoilPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => 
 
     previousSpiceTime = time;
 
-    if (time === 5 && recipe.timelineMap.fermentables.boilEnd.length) {
+    if (time === 5 && !_.isEmpty(recipe.timelineMap.fermentables.boilEnd)) {
       const boilEndIngredients = createFermentableIngredientList(recipe.timelineMap.fermentables.boilEnd);
       ingredients = _.concat(boilEndIngredients, ingredients);
     }

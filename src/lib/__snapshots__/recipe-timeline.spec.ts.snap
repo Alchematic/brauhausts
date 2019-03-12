@@ -22,7 +22,7 @@ Array [
   },
   Object {
     "duration": 60,
-    "instructions": "Add 2.27kg of Munich liquid extract (35.0 GU), 1.36kg of Wheat liquid extract (21.0 GU), 21g of Aramis hops, 7g of Aramis hops",
+    "instructions": "Add 2.27kg of Munich liquid extract (35.0 GU), 1.36kg of Wheat liquid extract (21.0 GU), 21g of Aramis hops (13.3 IBU), 7g of Aramis hops (4.4 IBU)",
     "phase": "boil",
     "time": 52,
   },
@@ -81,7 +81,7 @@ Array [
   },
   Object {
     "duration": 60,
-    "instructions": "Add 4.00kg of Extra pale extract (57.9 GU), 28g of Cascade hops",
+    "instructions": "Add 4.00kg of Extra pale extract (57.9 GU), 28g of Cascade hops (8.8 IBU)",
     "phase": "boil",
     "time": 48,
   },
