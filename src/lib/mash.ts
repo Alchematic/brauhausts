@@ -1,7 +1,7 @@
 import convert from 'convert-units';
 import * as _ from 'lodash';
 import { GLOBALS } from './globals';
-import { computeRecipeGrainWeight, Recipe } from './recipe';
+import { computeGrainWeight, Recipe } from './recipe';
 import { computeTempString, computeTimeToHeat, convertLPerKgToQtPerLb } from './utils';
 
 export type Mash = {
@@ -23,7 +23,9 @@ export const createDefaultMashStep = (recipe?: Recipe, recipeCurrentTemp?: numbe
   endTemp: null,
   time: 60,
   rampTime:
-    recipe && recipeCurrentTemp ? computeTimeToHeat(computeRecipeGrainWeight(recipe), 68 - recipeCurrentTemp) : null,
+    recipe && recipeCurrentTemp
+      ? computeTimeToHeat(computeGrainWeight(recipe.fermentables), 68 - recipeCurrentTemp)
+      : null,
 });
 
 export const createDefaultMash = (): Mash => ({

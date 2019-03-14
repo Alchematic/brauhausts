@@ -150,3 +150,19 @@ export const isObjectEqualWithRoundedNums = (a: any, b: any, percentDiffMax: num
   );
 
 export const lowerCaseIncludes = (a: string, b: string) => _.includes(_.toLower(a), _.toLower(b));
+
+export const pickAndParseFloat = <T>(obj: T, ...keys: Array<keyof T>) =>
+  _.mapValues(_.pick(obj, keys), (val: string) => parseFloat(val) || undefined);
+
+export const lowerKeys = <T extends { [key: string]: any }>(obj: T) => _.mapKeys(obj, (_value, key) => _.toLower(key));
+
+const keyLowerer = (value: any): any => {
+  if (_.isArray(value)) {
+    return _.map(value, val => _.cloneWith(val, keyLowerer));
+  }
+  if (_.isObject(value)) {
+    return _.mapValues(lowerKeys(value), val => _.cloneWith(val, keyLowerer));
+  }
+};
+
+export const lowerKeysDeep = <T extends { [key: string]: any }>(obj: T) => _.cloneWith(obj, keyLowerer);

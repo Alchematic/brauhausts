@@ -1,9 +1,9 @@
 import convert from 'convert-units';
 import * as _ from 'lodash';
-import { Fermentable, FermentableType } from './fermentable';
+import { Fermentable, FermentableUse } from './fermentable';
 import { GLOBALS } from './globals';
 import { computeMashStepDescription, createMash, MashStep } from './mash';
-import { computeRecipeGrainWeight, Recipe } from './recipe';
+import { computeGrainWeight, Recipe } from './recipe';
 import { Spice } from './spice';
 import { computeDisplayDuration, computeTempString, computeTimeToHeat, convertKgToLbOz } from './utils';
 import { Yeast } from './yeast';
@@ -15,7 +15,7 @@ export type TimelineMap = {
   yeast: Yeast[];
 };
 
-type TimelineFermentables = { [key in FermentableType]: TimelineFermentable[] };
+type TimelineFermentables = { [key in FermentableUse]: TimelineFermentable[] };
 
 type TimelineFermentable = {
   fermentable: Fermentable;
@@ -75,15 +75,14 @@ const createSpiceIngredientList = (spices: TimelineSpice[], isSiUnits = true) =>
  */
 const generateMashStepVolumeAdd = (
   step: Readonly<MashStep>,
-  recipe: Readonly<Recipe>,
+  recipeGrainWeight: number,
   strikeVolume: number,
   currentState: BrewState,
 ): BrewState => {
   // We are adding hot or cold water!
   // 4.184 is the specific heat of water. Not sure what's being computed here.
   const strikeTemp =
-    ((step.temp - currentState.temp) * ((GLOBALS.SPECIFIC_HEAT_OF_WATER / 10) * computeRecipeGrainWeight(recipe))) /
-      strikeVolume +
+    ((step.temp - currentState.temp) * ((GLOBALS.SPECIFIC_HEAT_OF_WATER / 10) * recipeGrainWeight)) / strikeVolume +
     step.temp;
   const timeToHeat = computeTimeToHeat(strikeVolume, strikeTemp - currentState.temp);
 
@@ -160,23 +159,20 @@ const computeMashPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => 
   });
 
   const steps = recipe.mash.steps;
+  const recipeGrainWeight = computeGrainWeight(recipe.fermentables);
 
   _.each(steps, step => {
-    const strikeVolume = step.waterRatio * computeRecipeGrainWeight(recipe) - currentState.volume;
+    const strikeVolume = step.waterRatio * recipeGrainWeight - currentState.volume;
 
     if (step.temp !== currentState.temp && strikeVolume !== 0) {
-      currentState = generateMashStepVolumeAdd(step, recipe, strikeVolume, currentState);
+      currentState = generateMashStepVolumeAdd(step, recipeGrainWeight, strikeVolume, currentState);
     } else if (step.temp !== currentState.temp) {
       currentState = generateMashStepHeat(step, currentState);
     }
 
     currentState.timeline.push({
       time: currentState.time,
-      instructions: `${step.name}: ${computeMashStepDescription(
-        step,
-        currentState.isSiUnits,
-        computeRecipeGrainWeight(recipe),
-      )}.`,
+      instructions: `${step.name}: ${computeMashStepDescription(step, currentState.isSiUnits, recipeGrainWeight)}.`,
       phase: 'mash',
     });
     currentState.time += step.time;
