@@ -5,7 +5,7 @@ import { GLOBALS } from './globals';
 import { computeMashStepDescription, createMash, MashStep } from './mash';
 import { computeRecipeGrainWeight, Recipe } from './recipe';
 import { Spice } from './spice';
-import { computeDisplayDuration, computeTimeToHeat, convertKgToLbOz } from './utils';
+import { computeDisplayDuration, computeTempString, computeTimeToHeat, convertKgToLbOz } from './utils';
 import { Yeast } from './yeast';
 
 export type TimelineMap = {
@@ -27,8 +27,10 @@ type TimelineSpice = {
   bitterness: number;
 };
 
+export type Timeline = { time: number; instructions: string; phase: string; duration?: number }[];
+
 type BrewState = {
-  timeline: { time: number; instructions: string; phase: string; duration?: number }[];
+  timeline: Timeline;
   volume: number;
   temp: number;
   time: number;
@@ -62,12 +64,15 @@ const createFermentableIngredientList = (fermentables: TimelineFermentable[], is
  */
 const createSpiceIngredientList = (spices: TimelineSpice[], isSiUnits = true) =>
   _.map(spices, ({ spice, bitterness }) => {
-    const weight = isSiUnits ? `${spice.weight * 1000}g` : convertKgToLbOz(spice.weight);
+    const weight = isSiUnits ? `${(spice.weight * 1000).toFixed(0)}g` : convertKgToLbOz(spice.weight);
     const ibu = bitterness ? ` (${bitterness.toFixed(1)} IBU)` : '';
 
     return `${weight} of ${spice.name}${ibu}`;
   });
 
+/**
+ * Generate the amount of water to add for a mash step
+ */
 const generateMashStepVolumeAdd = (
   step: Readonly<MashStep>,
   recipe: Readonly<Recipe>,
@@ -86,7 +91,8 @@ const generateMashStepVolumeAdd = (
     ? `${strikeVolume.toFixed(1)}l`
     : `${convert(strikeVolume)
         .from('l')
-        .to('qt')}qts`;
+        .to('qt')
+        .toFixed(1)}qts`;
 
   const strikeTempDesc = currentState.isSiUnits
     ? `${Math.round(strikeTemp)}°C`
@@ -108,6 +114,10 @@ const generateMashStepVolumeAdd = (
   };
 };
 
+/**
+ * Generate a step which will just heat the mash. Not sure how this works. If my understanding of mashing is correct,
+ * you wouldn't heat the mash directly.
+ */
 const generateMashStepHeat = (step: MashStep, currentState: BrewState) => {
   let heatTemp = '';
   const timeToHeat = computeTimeToHeat(currentState.volume, step.temp - currentState.temp);
@@ -183,6 +193,9 @@ const computeMashPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => 
   return currentState;
 };
 
+/**
+ * Computes the amount of water to use in the steeping step
+ */
 const computeSteepVolume = (steepWeight: number, minTotalLiters: number) => {
   const MAX_STEEP_LITERS_PER_KG = 4;
   const STEEP_LITERS_PER_KG = 2.75;
@@ -278,7 +291,7 @@ const computeTopUpPhase = (recipe: Readonly<Recipe>, currentState: BrewState) =>
   // ^ That's equivalent to currentState.volume > 0
   const action =
     currentState.volume > 0
-      ? `Top up the wort to ${boilVolume} and heat to a rolling boil`
+      ? `Top up the wort with water to ${boilVolume} and heat to a rolling boil`
       : `Bring ${boilVolume} to a rolling boil`;
 
   const boilTime = computeTimeToHeat(recipe.boilSize, 100 - currentState.temp);
@@ -342,11 +355,7 @@ const computeBoilPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => 
  * Computes the phase in which the wort is cooled down to a certain temperature to prepare for yeast
  */
 const computeChillPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
-  const chillTemp = currentState.isSiUnits
-    ? `${recipe.primaryTemp}°C`
-    : `${convert(recipe.primaryTemp)
-        .from('C')
-        .to('F')}°F`;
+  const chillTemp = computeTempString(recipe.primaryTemp, currentState.isSiUnits);
 
   // This is an assumption. The calculation to compute how long it takes to cool a pot of water is pretty complicated
   // and many of the variables will be impossible to know. But we could probably find a way to estimate a little better.
@@ -452,6 +461,62 @@ const computeDryHopPhase = (recipe: Readonly<Recipe>, currentState: BrewState) =
   return currentState;
 };
 
+const computeKegPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
+  const kegTemp = computeTempString(recipe.kegTemp, currentState.isSiUnits);
+  const keggingSteps = [
+    {
+      time: currentState.time,
+      instructions: 'Depressurize the keg by pulling the release valve for a few seconds.',
+      phase: 'keg',
+    },
+    {
+      time: currentState.time,
+      instructions: 'Disassemble, clean, and sanitize the keg. Then reassemble.',
+      phase: 'keg',
+    },
+    {
+      time: currentState.time,
+      instructions: 'Siphon your beer into the keg. Avoid splashing.',
+      phase: 'keg',
+    },
+    {
+      time: currentState.time,
+      instructions: 'Seal the keg.',
+      phase: 'keg',
+    },
+    {
+      time: currentState.time,
+      instructions: "Attach the gas line to the CO2 bottle and the keg's in port.",
+      phase: 'keg',
+    },
+    {
+      time: currentState.time,
+      instructions: 'Open the valves and check for gas leaks by sponging soapy water on all the connection points.',
+      phase: 'keg',
+    },
+    {
+      time: currentState.time,
+      instructions: 'With the psi low, pull the release valve for a few seconds to displace the oxygen.',
+      phase: 'keg',
+    },
+    {
+      time: currentState.time,
+      instructions: `Set the psi to ${recipe.kegPressure.toFixed(0)} and store at ${kegTemp} for 7 days.`,
+      phase: 'keg',
+    },
+    {
+      time: currentState.time + 7 * GLOBALS.MINUTES_PER_DAY,
+      instructions: 'Test the pour and if the beer is still too flat, store for 2 more days.',
+      phase: 'keg',
+    },
+  ];
+
+  currentState.time += 7 * GLOBALS.MINUTES_PER_DAY;
+  currentState.timeline = _.concat(currentState.timeline, keggingSteps);
+
+  return currentState;
+};
+
 const computeBottlePhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
   const numBottles = computeRecipeServings(recipe);
   currentState.timeline.push({
@@ -465,14 +530,7 @@ const computeBottlePhase = (recipe: Readonly<Recipe>, currentState: BrewState) =
 
 const computeAgingPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => {
   if (recipe.agingDays) {
-    let ageTemp = '';
-    if (currentState.isSiUnits) {
-      ageTemp = `${recipe.agingTemp}C`;
-    } else {
-      ageTemp = `${convert(recipe.agingTemp)
-        .from('C')
-        .to('F')}F`;
-    }
+    const ageTemp = computeTempString(recipe.agingTemp, currentState.isSiUnits);
 
     currentState.timeline.push({
       time: currentState.time,
@@ -511,11 +569,12 @@ const computeStepDurations = (timeline: BrewState['timeline']) =>
  * Yeast - The step in which yeasts are added which will allow the wort to ferment
  * Ferment - The step in which the beer is allowed to ferment
  * Dry Spice - Optional - The step in which we add hops directly to the fermented beer
- * Bottle - The phase in which the beer is primed and bottled
- * Aging - The phase in which we let the beer sit and carbonate
+ * Bottle - Optional - The phase in which the beer is primed and bottled
+ * Aging - Optional - The phase in which we let the bottled beer sit and carbonate
+ * Keg - Optional - The phase in which the beer is force-carbonated in a keg
  * Drink - The best and final phase
  */
-export const computeRecipeTimeline = (recipe: Readonly<Recipe>, isSiUnits = true) => {
+export const computeRecipeTimeline = (recipe: Readonly<Recipe>, isSiUnits = true, isBottled = true) => {
   let currentState: BrewState = {
     timeline: [],
     time: 0,
@@ -540,9 +599,13 @@ export const computeRecipeTimeline = (recipe: Readonly<Recipe>, isSiUnits = true
 
   currentState = computeDryHopPhase(recipe, currentState);
 
-  currentState = computeBottlePhase(recipe, currentState);
+  if (isBottled) {
+    currentState = computeBottlePhase(recipe, currentState);
 
-  currentState = computeAgingPhase(recipe, currentState);
+    currentState = computeAgingPhase(recipe, currentState);
+  } else {
+    currentState = computeKegPhase(recipe, currentState);
+  }
 
   currentState = computeDrinkPhase(currentState);
 

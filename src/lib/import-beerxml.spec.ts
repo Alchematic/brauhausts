@@ -1,29 +1,120 @@
-import fs from 'fs';
+import * as fs from 'fs';
 import * as _ from 'lodash';
 import { importBeerXML } from './import-beerxml';
 import { calculateRecipe } from './recipe';
-import { computeRecipeTimeline } from './recipe-timeline';
+import { computeRecipeTimeline, Timeline } from './recipe-timeline';
+
+const computeNumsWithMoreThan3Decimals = (timeline: Timeline) => {
+  const allInstructions = _.join(_.map(timeline, 'instructions'), '\n');
+
+  return _.words(allInstructions, /[0-9]+\.[0-9]{4}[^\s]+/gi);
+};
 
 describe('importBeerXML', () => {
-  it('should read the caribou slobber xml and generate a recipe timeline', async () => {
-    const beerXML = fs.readFileSync(`${__dirname}/../../beerxml/caribou-slobber.xml`, 'utf8');
+  const importedRecipes = [
+    {
+      recipe: importBeerXML(fs.readFileSync(`${__dirname}/../../beerxml/caribou-slobber.xml`, 'utf8')),
+      name: 'Caribou Slobber',
+    },
+    {
+      recipe: importBeerXML(fs.readFileSync(`${__dirname}/../../beerxml/KamaCitraSessionIPA.xml`, 'utf8')),
+      name: 'Kama Citra',
+    },
+  ];
+  _.each(importedRecipes, importedRecipe => {
+    describe(`when importing ${importedRecipe.name}`, () => {
+      describe('when calculating', () => {
+        it('should calculate a recipe', async () => {
+          const recipe = _.first(await importedRecipe.recipe);
+          const calculatedRecipe = calculateRecipe(recipe);
 
-    const result = await importBeerXML(beerXML);
-    const caribouSlobberRecipe = _.first(result);
-    const calculatedRecipe = calculateRecipe(caribouSlobberRecipe);
-    const timeline = computeRecipeTimeline(calculatedRecipe);
+          expect(calculatedRecipe).toMatchSnapshot();
+        });
 
-    expect(timeline).toMatchSnapshot();
-  });
+        it('should calculate an og very similar to the one in the recipe', async () => {
+          const recipe = _.first(await importedRecipe.recipe);
+          const calculatedRecipe = calculateRecipe(recipe);
 
-  it('should read the Kama Citra xml and generate a recipe timeline', async () => {
-    const beerXML = fs.readFileSync(`${__dirname}/../../beerxml/KamaCitraSessionIPA.xml`, 'utf8');
+          expect(calculatedRecipe.og.toFixed(2)).toBe(calculatedRecipe.est_og.toFixed(2));
+        });
 
-    const result = await importBeerXML(beerXML);
-    const kamaCitraRecipe = _.first(result);
-    const calculatedRecipe = calculateRecipe(kamaCitraRecipe);
-    const timeline = computeRecipeTimeline(calculatedRecipe);
+        it('should calculate an fg very similar to the one in the recipe', async () => {
+          const recipe = _.first(await importedRecipe.recipe);
+          const calculatedRecipe = calculateRecipe(recipe);
 
-    expect(timeline).toMatchSnapshot();
+          expect(calculatedRecipe.fg.toFixed(2)).toBe(calculatedRecipe.est_fg.toFixed(2));
+        });
+      });
+      describe('when generating timelines', () => {
+        describe('when bottling', () => {
+          describe('when using metric units', () => {
+            it('should generate a recipe timeline', async () => {
+              const recipe = _.first(await importedRecipe.recipe);
+              const calculatedRecipe = calculateRecipe(recipe);
+              const timeline = computeRecipeTimeline(calculatedRecipe);
+
+              expect(timeline).toMatchSnapshot();
+            });
+            it('should have no numbers with more than 3 decimals in the timeline', async () => {
+              const recipe = _.first(await importedRecipe.recipe);
+              const calculatedRecipe = calculateRecipe(recipe);
+              const timeline = computeRecipeTimeline(calculatedRecipe);
+
+              expect(computeNumsWithMoreThan3Decimals(timeline)).toEqual([]);
+            });
+          });
+          describe('when using imperial units', () => {
+            it('should generate a recipe timeline', async () => {
+              const recipe = _.first(await importedRecipe.recipe);
+              const calculatedRecipe = calculateRecipe(recipe);
+              const timeline = computeRecipeTimeline(calculatedRecipe, false);
+
+              expect(timeline).toMatchSnapshot();
+            });
+            it('should have no numbers with more than 3 decimals in the timeline', async () => {
+              const recipe = _.first(await importedRecipe.recipe);
+              const calculatedRecipe = calculateRecipe(recipe);
+              const timeline = computeRecipeTimeline(calculatedRecipe, false);
+
+              expect(computeNumsWithMoreThan3Decimals(timeline)).toEqual([]);
+            });
+          });
+        });
+        describe('when kegging', () => {
+          describe('when using metric units', () => {
+            it('should generate a recipe timeline', async () => {
+              const recipe = _.first(await importedRecipe.recipe);
+              const calculatedRecipe = calculateRecipe(recipe);
+              const timeline = computeRecipeTimeline(calculatedRecipe, true, false);
+
+              expect(timeline).toMatchSnapshot();
+            });
+            it('should have no numbers with more than 3 decimals in the timeline', async () => {
+              const recipe = _.first(await importedRecipe.recipe);
+              const calculatedRecipe = calculateRecipe(recipe);
+              const timeline = computeRecipeTimeline(calculatedRecipe, true, false);
+
+              expect(computeNumsWithMoreThan3Decimals(timeline)).toEqual([]);
+            });
+          });
+          describe('when using imperial units', () => {
+            it('should generate a recipe timeline', async () => {
+              const recipe = _.first(await importedRecipe.recipe);
+              const calculatedRecipe = calculateRecipe(recipe);
+              const timeline = computeRecipeTimeline(calculatedRecipe, false, false);
+
+              expect(timeline).toMatchSnapshot();
+            });
+            it('should have no numbers with more than 3 decimals in the timeline', async () => {
+              const recipe = _.first(await importedRecipe.recipe);
+              const calculatedRecipe = calculateRecipe(recipe);
+              const timeline = computeRecipeTimeline(calculatedRecipe, false, false);
+
+              expect(computeNumsWithMoreThan3Decimals(timeline)).toEqual([]);
+            });
+          });
+        });
+      });
+    });
   });
 });

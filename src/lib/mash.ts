@@ -2,7 +2,7 @@ import convert from 'convert-units';
 import * as _ from 'lodash';
 import { GLOBALS } from './globals';
 import { computeRecipeGrainWeight, Recipe } from './recipe';
-import { computeTimeToHeat, convertLPerKgToQtPerLb } from './utils';
+import { computeTempString, computeTimeToHeat, convertLPerKgToQtPerLb } from './utils';
 
 export type Mash = {
   name: string;
@@ -65,11 +65,7 @@ export const computeMashStepWaterAmount = (
 export const computeMashStepDescription = (mashStep: MashStep, isSiUnits: boolean, totalGrainWeight?: number) => {
   const absoluteUnits = isSiUnits ? 'l' : 'qt';
   const relativeUnits = isSiUnits ? 'l per kg' : 'qt per lb';
-  const temp = isSiUnits
-    ? `${mashStep.temp}C`
-    : `${convert(mashStep.temp)
-        .from('C')
-        .to('F')}F`;
+  const temp = computeTempString(mashStep.temp, isSiUnits);
   const waterRatio = isSiUnits ? mashStep.waterRatio : convertLPerKgToQtPerLb(mashStep.waterRatio);
   const waterAmount = computeMashStepWaterAmount(waterRatio, absoluteUnits, relativeUnits, isSiUnits, totalGrainWeight);
 

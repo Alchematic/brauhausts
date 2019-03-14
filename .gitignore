@@ -64,3 +64,5 @@ build
 src/**.js
 .idea/*
 __coverage__
+
+.DS_Store

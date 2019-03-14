@@ -6,7 +6,7 @@ import { Mash } from './mash';
 import { TimelineMap } from './recipe-timeline';
 import { computeIsDrySpice, computeSpiceBitterness, computeSpicePrice, Spice } from './spice';
 import { Style } from './style';
-import { lowerCaseIncludes } from './utils';
+import { convertSpecificGravityToPlato, lowerCaseIncludes } from './utils';
 import { computeYeastPrice, Yeast } from './yeast';
 export { importBeerXML } from './import-beerxml';
 
@@ -73,6 +73,9 @@ export type Recipe = {
   bottlingTemp: number;
   bottlingPressure: number;
 
+  kegTemp: number;
+  kegPressure: number;
+
   primingCornSugar: number;
   primingSugar: number;
   primingHoney: number;
@@ -132,6 +135,8 @@ export const createRecipe = (overrideRecipe?: Partial<Recipe>): Recipe => {
     calories: 0.0,
     bottlingTemp: 0.0,
     bottlingPressure: 0.0,
+    kegTemp: 0.0,
+    kegPressure: 0.0,
     primingCornSugar: 0.0,
     primingSugar: 0.0,
     primingHoney: 0.0,
@@ -213,6 +218,18 @@ export const computeRecipeGrainWeight = (recipe: Recipe) => {
   return _.sumBy(grainFermentables, 'weight') || 0;
 };
 
+const computeCarbVolume = (recipe: Recipe) => {
+  if (/stout|porter/i.test(recipe.name)) {
+    return 1.85;
+  }
+
+  if (/lambic|wheat/i.test(recipe.name)) {
+    return 3.3;
+  }
+
+  return 2.5;
+};
+
 export const calculateRecipe = (oldRecipe: Recipe) => {
   const recipe = _.cloneDeep(oldRecipe);
   recipe.og = 1.0;
@@ -227,12 +244,7 @@ export const calculateRecipe = (oldRecipe: Recipe) => {
   // A map of various ingredient values used to generate the timeline
   // steps below.
   recipe.timelineMap = {
-    fermentables: {
-      mash: [],
-      steep: [],
-      boil: [],
-      boilEnd: [],
-    },
+    fermentables: { mash: [], steep: [], boil: [], boilEnd: [] },
     times: {},
     drySpice: {},
     yeast: [],
@@ -270,7 +282,10 @@ export const calculateRecipe = (oldRecipe: Recipe) => {
 
     // Add fermentable info into the timeline map
     const fermentableType = computeFermentableType(fermentable, recipe.type);
-    const timelineMapFermentable = { fermentable, gravity: gu };
+    const timelineMapFermentable = {
+      fermentable,
+      gravity: gu,
+    };
     recipe.timelineMap.fermentables[fermentableType] = _.concat(
       recipe.timelineMap.fermentables[fermentableType],
       timelineMapFermentable,
@@ -300,8 +315,8 @@ export const calculateRecipe = (oldRecipe: Recipe) => {
   recipe.abv = ((1.05 * (recipe.og - recipe.fg)) / recipe.fg / 0.79) * 100.0;
 
   // Gravity degrees plato approximations
-  recipe.ogPlato = -463.37 + 668.72 * recipe.og - 205.35 * (recipe.og * recipe.og);
-  recipe.fgPlato = -463.37 + 668.72 * recipe.fg - 205.35 * (recipe.fg * recipe.fg);
+  recipe.ogPlato = convertSpecificGravityToPlato(recipe.og);
+  recipe.fgPlato = convertSpecificGravityToPlato(recipe.fg);
 
   // Update calories
   recipe.realExtract = 0.1808 * recipe.ogPlato + 0.8192 * recipe.fgPlato;
@@ -311,12 +326,29 @@ export const calculateRecipe = (oldRecipe: Recipe) => {
     (6.9 * recipe.abw + 4.0 * (recipe.realExtract - 0.1)) * recipe.fg * recipe.servingSize * 10,
   );
 
-  // Calculate bottle / keg priming amounts
-  const v = recipe.bottlingPressure || 2.5;
-  const t = convert(recipe.bottlingTemp || GLOBALS.ROOM_TEMP)
+  const carbVolume = recipe.bottlingPressure || computeCarbVolume(recipe);
+
+  recipe.kegTemp = recipe.bottlingTemp || GLOBALS.REFRIGERATOR_TEMP;
+  const kegTempF = convert(recipe.kegTemp)
     .from('C')
     .to('F');
-  recipe.primingCornSugar = 0.015195 * 5 * (v - 3.0378 + 0.050062 * t - 0.00026555 * t * t);
+
+  // Using brewcalc's kegPressure calculation: https://github.com/brewcomputer/brewcalc/blob/master/lib/brewcalc.js
+  recipe.kegPressure = Math.max(
+    0,
+    -16.6999 -
+      0.0101059 * kegTempF +
+      0.00116512 * kegTempF * kegTempF +
+      0.173354 * kegTempF * carbVolume +
+      4.24267 * carbVolume -
+      0.0684226 * carbVolume * carbVolume,
+  );
+
+  const bottlingTempF = convert(recipe.bottlingTemp || GLOBALS.ROOM_TEMP)
+    .from('C')
+    .to('F');
+  recipe.primingCornSugar =
+    0.015195 * 5 * (carbVolume - 3.0378 + 0.050062 * bottlingTempF - 0.00026555 * bottlingTempF * bottlingTempF);
   recipe.primingSugar = recipe.primingCornSugar * 0.90995;
   recipe.primingHoney = recipe.primingCornSugar * 1.22496;
   recipe.primingDme = recipe.primingCornSugar * 1.33249;
@@ -354,7 +386,10 @@ export const calculateRecipe = (oldRecipe: Recipe) => {
     // Update timeline map with hop information
     if (isDrySpice) {
       recipe.timelineMap.drySpice[time] = recipe.timelineMap.drySpice[time] || [];
-      recipe.timelineMap.drySpice[time].push({ spice, bitterness });
+      recipe.timelineMap.drySpice[time].push({
+        spice,
+        bitterness,
+      });
     } else if (isBoilSpice) {
       recipe.timelineMap.times[time] = recipe.timelineMap.times[time] || [];
       recipe.timelineMap.times[time].push({
