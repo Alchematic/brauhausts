@@ -44,6 +44,13 @@ describe('importBeerXML', () => {
 
           expect(calculatedRecipe.fg.toFixed(2)).toBe(calculatedRecipe.est_fg.toFixed(2));
         });
+
+        it('should calculate a color very similar to the one in the recipe', async () => {
+          const recipe = _.first(await importedRecipe.recipe);
+          const calculatedRecipe = calculateRecipe(recipe);
+
+          expect(calculatedRecipe.color.toFixed(2)).toBe(calculatedRecipe.est_color.toFixed(2));
+        });
       });
       describe('when generating timelines', () => {
         describe('when bottling', () => {

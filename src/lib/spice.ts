@@ -25,6 +25,9 @@ export const computeSpiceBitterness = (
   batchSize: number,
 ) => {
   // Calculate bitterness based on chosen method
+  if (!spice.aa) {
+    return 0;
+  }
 
   if (ibuMethod === 'tinseth') {
     return (

@@ -92,7 +92,7 @@ Object {
     "times": Object {
       "60": Array [
         Object {
-          "bitterness": 0,
+          "bitterness": 9.374843319028964,
           "spice": Object {
             "aa": 4.5,
             "form": "pellet",
@@ -127,8 +127,8 @@ Object {
 
 exports[`calculateRecipe should return the previously calculated result that has been compared with brauhaus for realRecipe2 1`] = `
 Object {
-  "abv": 6.66787000045513,
-  "abw": 5.217281169705499,
+  "abv": 6.667870000455128,
+  "abw": 5.2172811697054975,
   "agingDays": 14,
   "agingTemp": 20,
   "author": "danielgtaylor",
@@ -139,9 +139,9 @@ Object {
   "bottlingPressure": 0,
   "bottlingTemp": 0,
   "brewDayDuration": null,
-  "buToGu": 0.29477790462738984,
-  "bv": 0.7577838165228565,
-  "calories": 195.0142001496624,
+  "buToGu": 0.29477790462738873,
+  "bv": 0.7577838165228477,
+  "calories": 195.0142001496609,
   "color": 10.100670100120798,
   "description": "Recipe description",
   "est_abv": 0,
@@ -185,8 +185,8 @@ Object {
       "yield": 73.5707794175,
     },
   ],
-  "fg": 1.0096479620355394,
-  "fgPlato": 2.4712690723142714,
+  "fg": 1.0096479620355396,
+  "fgPlato": 2.4712690723141293,
   "ibu": 17.775037704755917,
   "ibuMethod": "tinseth",
   "kegPressure": 12.274489749999999,
@@ -195,8 +195,8 @@ Object {
   "mashEfficiency": 75,
   "name": "Aramis Saison",
   "notes": "",
-  "og": 1.060299762722122,
-  "ogPlato": 14.811325219556892,
+  "og": 1.0602997627221222,
+  "ogPlato": 14.811325219556977,
   "price": 33.94436787172289,
   "primaryDays": 14,
   "primaryTemp": 20,
@@ -204,7 +204,7 @@ Object {
   "primingDme": 0.17271702105852554,
   "primingHoney": 0.15877900931027733,
   "primingSugar": 0.11794749177270022,
-  "realExtract": 4.702351223735738,
+  "realExtract": 4.702351223735636,
   "secondaryDays": 0,
   "secondaryTemp": 0,
   "servingSize": 0.355,
@@ -321,7 +321,7 @@ Object {
     "times": Object {
       "60": Array [
         Object {
-          "bitterness": 0,
+          "bitterness": 13.331278278576342,
           "spice": Object {
             "aa": 8.1,
             "form": "Pellet",
@@ -332,7 +332,7 @@ Object {
           },
         },
         Object {
-          "bitterness": 0,
+          "bitterness": 4.443759426179573,
           "spice": Object {
             "aa": 8.1,
             "form": "Pellet",
@@ -475,7 +475,7 @@ Object {
     "times": Object {
       "60": Array [
         Object {
-          "bitterness": 0,
+          "bitterness": 8.78494811270295,
           "spice": Object {
             "aa": 4.5,
             "form": "pellet",

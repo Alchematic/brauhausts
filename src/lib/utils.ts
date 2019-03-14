@@ -166,3 +166,6 @@ const keyLowerer = (value: any): any => {
 };
 
 export const lowerKeysDeep = <T extends { [key: string]: any }>(obj: T) => _.cloneWith(obj, keyLowerer);
+
+export const mergeObjects = <A, B>(obj: A, src: B) =>
+  _.mergeWith(obj, src, (objValue, srcValue) => (_.isArray(objValue) ? objValue.concat(srcValue) : undefined));

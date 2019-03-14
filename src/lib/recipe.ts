@@ -3,10 +3,10 @@ import * as _ from 'lodash';
 import { computeFermentableGU, computeFermentablePrice, computeFermentableUse, Fermentable } from './fermentable';
 import { GLOBALS } from './globals';
 import { Mash } from './mash';
-import { TimelineMap } from './recipe-timeline';
+import { TimelineFermentable, TimelineMap } from './recipe-timeline';
 import { computeIsDrySpice, computeSpiceBitterness, computeSpicePrice, Spice } from './spice';
 import { Style } from './style';
-import { convertSpecificGravityToPlato, lowerCaseIncludes } from './utils';
+import { convertSpecificGravityToPlato, lowerCaseIncludes, mergeObjects } from './utils';
 import { computeYeastPrice, Yeast } from './yeast';
 export { importBeerXML } from './import-beerxml';
 
@@ -199,95 +199,128 @@ const computeCarbVolume = (recipe: Recipe) => {
   return 2.5;
 };
 
+const computeFermentableMCU = (fermentable: Fermentable, batchSize: number) =>
+  (fermentable.color *
+    convert(fermentable.weight)
+      .from('kg')
+      .to('lb')) /
+  convert(batchSize)
+    .from('l')
+    .to('gal');
+
+const computeRecipeMCU = (fermentables: Fermentable[], batchSize: number) =>
+  _.sum(_.map(fermentables, fermentable => computeFermentableMCU(fermentable, batchSize)));
+
+const computeRecipeColor = (fermentables: Fermentable[], batchSize: number) => {
+  const recipeMCU = computeRecipeMCU(fermentables, batchSize);
+
+  return 1.4922 * Math.pow(recipeMCU, 0.6859);
+};
+
+const computeFermentableEfficiency = (fermentable: Fermentable, steepEfficiency: number, mashEfficiency: number) =>
+  computeFermentableUse(fermentable) === 'steep'
+    ? steepEfficiency / 100.0
+    : computeFermentableUse(fermentable) === 'mash'
+    ? mashEfficiency / 100.0
+    : 1.0;
+
+const computeFermentableOG = (
+  fermentable: Fermentable,
+  steepEfficiency: number,
+  mashEfficiency: number,
+  batchSize: number,
+) => {
+  const efficiency = computeFermentableEfficiency(fermentable, steepEfficiency, mashEfficiency);
+  const gu = computeFermentableGU(fermentable, batchSize) * efficiency;
+
+  return gu / 1000.0;
+};
+
+const computeRecipeOG = (
+  fermentables: Fermentable[],
+  steepEfficiency: number,
+  mashEfficiency: number,
+  batchSize: number,
+) =>
+  1 +
+  _.sum(
+    _.map(fermentables, fermentable => computeFermentableOG(fermentable, steepEfficiency, mashEfficiency, batchSize)),
+  );
+
+const computeTimelineMapFermentables = (
+  fermentables: Fermentable[],
+  type: RecipeType,
+  steepEfficiency: number,
+  mashEfficiency: number,
+  batchSize: number,
+) => {
+  const initialTimelineMapFermentables: TimelineMap['fermentables'] = { mash: [], steep: [], boil: [], boilEnd: [] };
+
+  const fermentablesWithGravity = _.map(fermentables, fermentable => ({
+    fermentable,
+    gravity: computeFermentableOG(fermentable, steepEfficiency, mashEfficiency, batchSize) * 1000,
+  }));
+
+  const newTimelineMapFermentables = _.groupBy(fermentablesWithGravity, ({ fermentable }) =>
+    computeFermentableUse(fermentable, type),
+  );
+
+  return mergeObjects(initialTimelineMapFermentables, newTimelineMapFermentables);
+};
+
+const groupSpicesByUse = (spices: Spice[]) =>
+  _.groupBy(spices, spice => {
+    if (spice.use.toLowerCase() === 'boil') {
+      return 'boilSpices';
+    }
+    if (spice.use.toLowerCase() === 'mash') {
+      return 'mashSpices';
+    }
+    if (computeIsDrySpice(spice)) {
+      return 'drySpices';
+    }
+
+    return 'otherSpices';
+  });
+
 export const calculateRecipe = (oldRecipe: Recipe) => {
   const recipe = _.cloneDeep(oldRecipe);
-  recipe.og = 1.0;
-  recipe.fg = 0.0;
-  recipe.ibu = 0.0;
-  recipe.price = 0.0;
 
-  let earlyOg = 1.0;
-  let mcu = 0.0;
-  let attenuation = 0.0;
-
-  // A map of various ingredient values used to generate the timeline
-  // steps below.
+  // A map of various ingredient values used to generate the timeline steps below.
   recipe.timelineMap = {
-    fermentables: { mash: [], steep: [], boil: [], boilEnd: [] },
+    fermentables: computeTimelineMapFermentables(
+      recipe.fermentables,
+      recipe.type,
+      recipe.steepEfficiency,
+      recipe.mashEfficiency,
+      recipe.batchSize,
+    ),
     times: {},
     drySpice: {},
-    yeast: [],
+    yeast: recipe.yeast,
   };
 
-  // Calculate gravities and color from fermentables
-  _.each(recipe.fermentables, fermentable => {
-    let efficiency = 1.0;
-    if (computeFermentableUse(fermentable) === 'steep') {
-      efficiency = recipe.steepEfficiency / 100.0;
-    } else if (computeFermentableUse(fermentable) === 'mash') {
-      efficiency = recipe.mashEfficiency / 100.0;
-    }
+  // Calculate properties dependant on fermentables
+  recipe.color = computeRecipeColor(recipe.fermentables, recipe.batchSize);
+  recipe.og = computeRecipeOG(recipe.fermentables, recipe.steepEfficiency, recipe.mashEfficiency, recipe.batchSize);
 
-    mcu +=
-      (fermentable.color *
-        convert(fermentable.weight)
-          .from('kg')
-          .to('lb')) /
-      convert(recipe.batchSize)
-        .from('l')
-        .to('gal');
+  const earlyFermentables = _.filter(recipe.fermentables, fermentable => !fermentable.late);
+  const earlyOg = computeRecipeOG(earlyFermentables, recipe.steepEfficiency, recipe.mashEfficiency, recipe.boilSize);
 
-    // Update gravities
-    const gu = computeFermentableGU(fermentable, recipe.batchSize) * efficiency;
-    const gravity = gu / 1000.0;
-    recipe.og += gravity;
+  const fermentablesPrice = _.sum(_.map(recipe.fermentables, computeFermentablePrice));
 
-    if (!fermentable.late) {
-      earlyOg += (computeFermentableGU(fermentable, recipe.boilSize) * efficiency) / 1000.0;
-    }
+  // calculate properties dependent on yeast
+  const yeastsPrice = _.sum(_.map(recipe.yeast, computeYeastPrice));
 
-    // Update recipe price with fermentable
-    recipe.price += computeFermentablePrice(fermentable);
-
-    // Add fermentable info into the timeline map
-    const fermentableUse = computeFermentableUse(fermentable, recipe.type);
-    const timelineMapFermentable = {
-      fermentable,
-      gravity: gu,
-    };
-    recipe.timelineMap.fermentables[fermentableUse] = _.concat(
-      recipe.timelineMap.fermentables[fermentableUse],
-      timelineMapFermentable,
-    );
-  });
-
-  recipe.color = 1.4922 * Math.pow(mcu, 0.6859);
-
-  // Get attenuation for final gravity
-  _.each(recipe.yeast, yeast => {
-    if (yeast.attenuation > attenuation) {
-      attenuation = yeast.attenuation;
-    }
-
-    // Update recipe price with yeast
-    recipe.price += computeYeastPrice(yeast);
-
-    // Add yeast info into the timeline map
-    recipe.timelineMap.yeast.push(yeast);
-  });
-
-  // Update final gravity based on original gravity and maximum
-  // attenuation from yeast.
+  const attenuation = _.maxBy(recipe.yeast, 'attenuation').attenuation;
   recipe.fg = recipe.og - ((recipe.og - 1.0) * attenuation) / 100.0;
 
-  // Update alcohol by volume based on original and final gravity
   recipe.abv = ((1.05 * (recipe.og - recipe.fg)) / recipe.fg / 0.79) * 100.0;
 
   // Gravity degrees plato approximations
   recipe.ogPlato = convertSpecificGravityToPlato(recipe.og);
   recipe.fgPlato = convertSpecificGravityToPlato(recipe.fg);
 
-  // Update calories
   recipe.realExtract = 0.1808 * recipe.ogPlato + 0.8192 * recipe.fgPlato;
   recipe.abw = (0.79 * recipe.abv) / recipe.fg;
   recipe.calories = Math.max(
@@ -322,51 +355,44 @@ export const calculateRecipe = (oldRecipe: Recipe) => {
   recipe.primingHoney = recipe.primingCornSugar * 1.22496;
   recipe.primingDme = recipe.primingCornSugar * 1.33249;
 
-  // Calculate bitterness
-  _.each(recipe.spices, spice => {
-    const bitterness = 0.0;
-    const time: number = spice.time;
+  // Calculate spices
+  const spicesPrice = _.sum(_.map(recipe.spices, computeSpicePrice));
+  const { boilSpices, mashSpices, drySpices } = groupSpicesByUse(recipe.spices);
 
-    const isBoilSpice = spice.use.toLowerCase() === 'boil';
-    const isMashSpice = spice.use.toLowerCase() === 'mash';
-    const isDrySpice = computeIsDrySpice(spice);
-
-    if (isMashSpice) {
-      const spiceFermentable: Fermentable = {
+  const mashSpiceTimelineFermentables = _.map(
+    mashSpices,
+    (spice): TimelineFermentable => ({
+      fermentable: {
         type: 'Grain',
         name: spice.name,
         weight: spice.weight,
         color: null,
         yield: null,
-      };
-      recipe.timelineMap.fermentables.mash.push({
-        fermentable: spiceFermentable,
-        gravity: 0,
-      });
-    }
+      },
+      gravity: 0,
+    }),
+  );
 
-    if (spice.aa && isBoilSpice) {
-      recipe.ibu += computeSpiceBitterness(spice, recipe.ibuMethod, earlyOg, recipe.batchSize);
-    }
+  recipe.timelineMap.fermentables.mash = _.concat(
+    _.toArray(recipe.timelineMap.fermentables.mash),
+    mashSpiceTimelineFermentables,
+  );
 
-    // Update recipe price with spice
-    recipe.price += computeSpicePrice(spice);
+  const timelineBoilSpices = _.map(boilSpices, spice => ({
+    spice,
+    bitterness: computeSpiceBitterness(spice, recipe.ibuMethod, earlyOg, recipe.batchSize),
+  }));
+  const spicesBitterness = _.sumBy(timelineBoilSpices, 'bitterness');
+  recipe.ibu = spicesBitterness;
+  recipe.timelineMap.times = _.groupBy(timelineBoilSpices, ({ spice }) => spice.time);
 
-    // Update timeline map with hop information
-    if (isDrySpice) {
-      recipe.timelineMap.drySpice[time] = recipe.timelineMap.drySpice[time] || [];
-      recipe.timelineMap.drySpice[time].push({
-        spice,
-        bitterness,
-      });
-    } else if (isBoilSpice) {
-      recipe.timelineMap.times[time] = recipe.timelineMap.times[time] || [];
-      recipe.timelineMap.times[time].push({
-        spice,
-        bitterness,
-      });
-    }
-  });
+  const timelineDrySpices = _.map(drySpices, spice => ({
+    spice,
+    bitterness: 0,
+  }));
+  recipe.timelineMap.drySpice = _.groupBy(timelineDrySpices, ({ spice }) => spice.time);
+
+  recipe.price = spicesPrice + fermentablesPrice + yeastsPrice;
 
   // Calculate bitterness to gravity ratios
   recipe.buToGu = recipe.ibu / (recipe.og - 1.0) / 1000.0;
