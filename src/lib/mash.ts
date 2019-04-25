@@ -41,7 +41,9 @@ export const createMash = (recipe: Recipe, recipeCurrentTemp: number, overrideMa
   const newMash: Mash = createDefaultMash();
   newMash.steps = [createDefaultMashStep(recipe, recipeCurrentTemp)];
 
-  return _.assign(newMash, overrideMash);
+  const result = _.assign(newMash, overrideMash);
+
+  return result;
 };
 
 export const computeMashStepWaterAmount = (
@@ -64,7 +66,12 @@ export const computeMashStepWaterAmount = (
   }
 };
 
-export const computeMashStepDescription = (mashStep: MashStep, isSiUnits: boolean, totalGrainWeight?: number) => {
+export const computeMashStepDescription = (
+  mashStep: MashStep,
+  stepIndex: number,
+  isSiUnits: boolean,
+  totalGrainWeight?: number,
+) => {
   const absoluteUnits = isSiUnits ? 'l' : 'qt';
   const relativeUnits = isSiUnits ? 'l per kg' : 'qt per lb';
   const temp = computeTempString(mashStep.temp, isSiUnits);
@@ -73,11 +80,19 @@ export const computeMashStepDescription = (mashStep: MashStep, isSiUnits: boolea
 
   switch (mashStep.type) {
     case MashStepType.Infusion:
-      return `Infuse ${waterAmount} for ${mashStep.time} minutes at ${temp}`;
+      if (stepIndex === 0) {
+        return `Allow your mash to rest at ${temp} for ${mashStep.time} minutes.`;
+      }
+
+      return `Add about ${waterAmount} of boiling water to your wort until the temperature reaches ${temp}. Let sit for ${
+        mashStep.time
+      } minutes.`;
     case MashStepType.Temperature:
-      return `Stop heating and hold for ${mashStep.time} minutes at ${temp}`;
+      return `Adjust your mash temperature to ${temp} and hold for ${mashStep.time} minutes.`;
     case MashStepType.Decoction:
-      return `Add ${waterAmount} boiled water to reach ${temp} and hold for ${mashStep.time} minutes`;
+      return `Drain ${waterAmount} from your mash into a kettle and boil. Add back to mash to reach ${temp} and hold for ${
+        mashStep.time
+      } minutes.`;
     default:
       return `Unknown mash step type '${mashStep.type}'!`;
   }

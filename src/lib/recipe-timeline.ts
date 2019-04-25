@@ -5,7 +5,13 @@ import { GLOBALS } from './globals';
 import { computeMashStepDescription, createMash, MashStep } from './mash';
 import { computeGrainWeight, Recipe } from './recipe';
 import { Spice } from './spice';
-import { computeDisplayDuration, computeTempString, computeTimeToHeat, convertKgToLbOz } from './utils';
+import {
+  computeDisplayDuration,
+  computeTempString,
+  computeTimeToHeat,
+  computeVolumeString,
+  convertKgToLbOz,
+} from './utils';
 import { Yeast } from './yeast';
 
 export type TimelineMap = {
@@ -81,6 +87,7 @@ const generateMashStepVolumeAdd = (
 ): BrewState => {
   // We are adding hot or cold water!
   // 4.184 is the specific heat of water. Not sure what's being computed here.
+  // Update: I think this is the temperature the mash should be before adding grains, which will cool it.
   const strikeTemp =
     ((step.temp - currentState.temp) * ((GLOBALS.SPECIFIC_HEAT_OF_WATER / 10) * recipeGrainWeight)) / strikeVolume +
     step.temp;
@@ -105,9 +112,12 @@ const generateMashStepVolumeAdd = (
     ...currentState,
     timeline: _.concat(currentState.timeline, {
       time: currentState.time,
-      instructions: `Heat ${strikeVolumeDesc} to ${strikeTempDesc} (about ${Math.round(timeToHeat)} minutes)`,
+      instructions: `Heat ${strikeVolumeDesc} to ${strikeTempDesc} (about ${Math.round(
+        timeToHeat,
+      )} minutes). Add the heated water to your mash tun.`,
       phase: 'mash',
     }),
+    temp: strikeTemp,
     time: timeToHeat + currentState.time,
     volume: strikeVolume + currentState.volume,
   };
@@ -154,37 +164,64 @@ const computeMashPhase = (recipe: Readonly<Recipe>, currentState: BrewState) => 
   const ingredients = createFermentableIngredientList(recipe.timelineMap.fermentables.mash);
   currentState.timeline.push({
     time: currentState.time,
-    instructions: `Begin ${mash.name} mash. Add ${ingredients.join(', ')}.`,
+    instructions: `Begin mash. Prepare ${ingredients.join(', ')}.`,
     phase: 'mash',
   });
 
   const steps = recipe.mash.steps;
   const recipeGrainWeight = computeGrainWeight(recipe.fermentables);
+  let addedIngredients = false;
 
-  _.each(steps, step => {
+  _.each(steps, (step, stepIndex) => {
     const strikeVolume = step.waterRatio * recipeGrainWeight - currentState.volume;
 
-    if (step.temp !== currentState.temp && strikeVolume !== 0) {
+    if (step.temp !== currentState.temp && strikeVolume > 0) {
       currentState = generateMashStepVolumeAdd(step, recipeGrainWeight, strikeVolume, currentState);
-    } else if (step.temp !== currentState.temp) {
-      currentState = generateMashStepHeat(step, currentState);
+    }
+    // TODO: Leaving here incase we need for later. As far as I can tell the actual mash steps will indicate if a mash needs
+    // to be heated directly, but I could definitely be wrong. Could use some help validating.
+    // } else if (step.temp !== currentState.temp) {
+    //   currentState = generateMashStepHeat(step, currentState);
+    // }
+
+    if (!addedIngredients) {
+      currentState.timeline.push({
+        time: currentState.time,
+        instructions: `Add ${ingredients.join(', ')} directly to the mash until all the grains are covered by water.`,
+        phase: 'mash',
+      });
+      addedIngredients = true;
     }
 
     currentState.timeline.push({
       time: currentState.time,
-      instructions: `${step.name}: ${computeMashStepDescription(step, currentState.isSiUnits, recipeGrainWeight)}.`,
+      instructions: computeMashStepDescription(step, stepIndex, currentState.isSiUnits, recipeGrainWeight),
       phase: 'mash',
     });
+
     currentState.time += step.time;
     currentState.temp = step.temp - (step.time * GLOBALS.MASH_HEAT_LOSS) / 60.0;
   });
 
   currentState.timeline.push({
     time: currentState.time,
-    instructions: 'Remove grains from mash. This is now your wort.',
+    instructions: 'Drain your mash and transfer the liquid into your kettle. This is now your wort.',
     phase: 'mash',
   });
   currentState.time += 5;
+
+  if (currentState.volume < recipe.boilSize) {
+    const spargeVolume = Math.min(recipe.boilSize - currentState.volume, 4);
+    const spargeVolumeString = computeVolumeString(spargeVolume, currentState.isSiUnits);
+    const spargeTempString = computeTempString(mash.spargeTemp, currentState.isSiUnits);
+    currentState.timeline.push({
+      time: currentState.time,
+      instructions: `Pour ${spargeVolumeString} of ${spargeTempString} water over your grains. Let that sit for 20 minutes then collect the result and add it to your wort.`,
+      phase: 'mash',
+    });
+    currentState.volume += spargeVolume;
+    currentState.time += 20;
+  }
 
   return currentState;
 };
@@ -260,10 +297,22 @@ const computeSteepPhase = (recipe: Readonly<Recipe>, currentState: BrewState) =>
   const ingredients = createFermentableIngredientList(recipe.timelineMap.fermentables.steep);
   currentState.timeline.push({
     time: currentState.time,
-    instructions: `Add ${ingredients.join(', ')} and steep for ${recipe.steepTime} minutes.`,
+    instructions: `Add ${ingredients.join(', ')} to grain socks`,
+    phase: 'steep',
+  });
+
+  currentState.timeline.push({
+    time: currentState.time,
+    instructions: `Add grain socks to heated pot. Steep for ${recipe.steepTime} minutes.`,
     phase: 'steep',
   });
   currentState.time += recipe.steepTime;
+
+  currentState.timeline.push({
+    time: currentState.time,
+    instructions: `Remove grain socks from pot.`,
+    phase: 'steep',
+  });
 
   return currentState;
 };
@@ -276,18 +325,19 @@ const computeTopUpPhase = (recipe: Readonly<Recipe>, currentState: BrewState) =>
   const waterChangeRatio = Math.min(1, currentState.volume / recipe.boilSize);
   currentState.temp = currentState.temp * waterChangeRatio + GLOBALS.ROOM_TEMP * (1.0 - waterChangeRatio);
 
-  const boilVolume = currentState.isSiUnits
-    ? `${recipe.boilSize.toFixed(1)}l`
-    : `${convert(recipe.boilSize)
-        .from('l')
-        .to('gal')
-        .toFixed(1)}gal`;
+  const boilVolume = computeVolumeString(recipe.boilSize, currentState.isSiUnits);
 
   // Old: recipe.boilSize - currentState.volume < recipe.boilSize
   // ^ That's equivalent to currentState.volume > 0
+  const volumeMissingWater = recipe.boilSize - currentState.volume;
+  const volumeMissingWaterString = computeVolumeString(volumeMissingWater, currentState.isSiUnits);
+  const addWaterString =
+    volumeMissingWater > 0
+      ? `Add ${volumeMissingWaterString} of water to your wort so that it reaches ${boilVolume}. `
+      : '';
   const action =
     currentState.volume > 0
-      ? `Top up the wort with water to ${boilVolume} and heat to a rolling boil`
+      ? `${addWaterString}Heat your wort to a rolling boil`
       : `Bring ${boilVolume} to a rolling boil`;
 
   const boilTime = computeTimeToHeat(recipe.boilSize, 100 - currentState.temp);

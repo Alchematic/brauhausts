@@ -10,7 +10,7 @@ const computeNumsWithMoreThan3Decimals = (timeline: Timeline) => {
   return _.words(allInstructions, /[0-9]+\.[0-9]{4}[^\s]+/gi);
 };
 
-describe('importBeerXML', () => {
+fdescribe('importBeerXML', () => {
   const importedRecipes = [
     {
       recipe: importBeerXML(fs.readFileSync(`${__dirname}/../../beerxml/caribou-slobber.xml`, 'utf8')),
@@ -19,6 +19,10 @@ describe('importBeerXML', () => {
     {
       recipe: importBeerXML(fs.readFileSync(`${__dirname}/../../beerxml/KamaCitraSessionIPA.xml`, 'utf8')),
       name: 'Kama Citra',
+    },
+    {
+      recipe: importBeerXML(fs.readFileSync(`${__dirname}/../../beerxml/BCIrishRed.xml`, 'utf8')),
+      name: 'BC Irish Red',
     },
   ];
   _.each(importedRecipes, importedRecipe => {
@@ -105,7 +109,7 @@ describe('importBeerXML', () => {
             });
           });
           describe('when using imperial units', () => {
-            it('should generate a recipe timeline', async () => {
+            fit('should generate a recipe timeline', async () => {
               const recipe = _.first(await importedRecipe.recipe);
               const calculatedRecipe = calculateRecipe(recipe);
               const timeline = computeRecipeTimeline(calculatedRecipe, false, false);

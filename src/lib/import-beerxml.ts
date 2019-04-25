@@ -121,9 +121,10 @@ export const importBeerXML = async (xml: string) => {
     const xmlFermentables = findPluralOrSingularAsArray(xmlRecipe, 'fermentables', 'fermentable');
     const xmlYeasts = findPluralOrSingularAsArray(xmlRecipe, 'yeasts', 'yeast');
     const xmlMiscs = findPluralOrSingularAsArray(xmlRecipe, 'miscs', 'misc');
-    const xmlMashSteps = _.map(
-      findPluralOrSingularAsArray(xmlRecipe, 'mash.mash_steps', 'mash.mash_steps'),
-      'mash_step',
+    const xmlMashSteps = findPluralOrSingularAsArray(
+      xmlRecipe,
+      'mash.mash_steps.mash_step',
+      'mash.mash_steps.mash_step',
     );
 
     const fermentables = computeImportFermentables(xmlFermentables);

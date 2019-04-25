@@ -76,6 +76,14 @@ export const computeTempString = (temp: number, isSiUnits: boolean) =>
         .to('F')
         .toFixed(0)}°F`;
 
+export const computeVolumeString = (volume: number, isSiUnits: boolean) =>
+  isSiUnits
+    ? `${volume.toFixed(1)}L`
+    : `${convert(volume)
+        .from('l')
+        .to('qt')
+        .toFixed(1)}qts`;
+
 export const convertSpecificGravityToPlato = (sg: number) =>
   -616.868 + 1111.14 * sg - 630.272 * sg * sg + 135.997 * sg * sg * sg;
 
